@@ -1,12 +1,17 @@
 package objectsorting.object;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import objects.Util;
 
-public class Setting {
+public class Setting implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public List<Source> sourceList = new ArrayList<>();
 	public List<Sink> sinkList = new ArrayList<>();
 	public List<Player> playerList = new ArrayList<>();
@@ -15,7 +20,7 @@ public class Setting {
 	public int line1Position = 500;
 	public int line2Position = 1000;
 	
-	public int timeWindow;
+	public transient int timeWindow;
 	public int maxDropOffRate;
 	public int gameEndCriterion;
 	

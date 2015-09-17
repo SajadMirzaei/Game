@@ -1,9 +1,17 @@
 package objectsorting.object;
 
-public class Base {
+import java.awt.Color;
+import java.io.Serializable;
+
+public class Base implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String id = "";
 	private int[] position;
 	private int size;
+	private Color color;
 	
 	public Base(String id, int[] position) {
 		this.id = id;
@@ -33,4 +41,14 @@ public class Base {
 	public int getSize() {
 		return size;
 	}
+
+	public Color getColor() {
+		return color;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
+	}
+	
+	
 }

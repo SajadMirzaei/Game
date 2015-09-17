@@ -8,7 +8,9 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -28,6 +30,7 @@ import javax.swing.JToggleButton;
 import javax.swing.plaf.metal.MetalToggleButtonUI;
 
 import objects.Util;
+import objectsorting.object.GameStatus;
 import objectsorting.object.Setting;
 
 public class Client extends JFrame{
@@ -104,6 +107,38 @@ public class Client extends JFrame{
 		}
 	}
 	
+	public void updateClient(byte[] b){
+	    try {
+	    	ByteArrayInputStream bis = new ByteArrayInputStream(b);
+	    	ObjectInputStream ois = new ObjectInputStream(bis);
+			Object object = ois.readObject();
+			if (object instanceof Setting) {
+				setting = (Setting) object;
+				connected = true;
+			}else if (object instanceof GameStatus){
+				if (!started) {
+					started = true;
+					initiateGamePanel();
+				}
+				gamePanel.updatePositions((GameStatus) object);
+			}
+			bis.close();
+			ois.close();
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+		}
+//		if (s.contains("setting")) {
+//			setting = new Setting(s);
+//			connected = true;
+//		}else if (s.contains("status")){
+//			if (!started) {
+//				started = true;
+//				initiateGamePanel();
+//			}
+//			gamePanel.updatePositions(s);
+//		}
+	}
+	
 	public void initiateWaitingDialog(){
 		clientID = nameField.getText() + System.currentTimeMillis();
 		setEnabled(false);
@@ -168,7 +203,7 @@ class ClientUDPReceiver implements Runnable{
 
 	@Override
 	public void run() {
-		byte[] receiveData = new byte[1024];
+		byte[] receiveData = new byte[4096];
 		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		while (true) {
 			try{
@@ -176,7 +211,8 @@ class ClientUDPReceiver implements Runnable{
 				receiverSocket.receive(receivePacket);
 				String received = new String(receivePacket.getData(),0,receivePacket.getLength());
 //				System.out.println("Received: " + received);
-				client.updateClient(received);
+				client.updateClient(receivePacket.getData());
+//				client.updateClient(received);
 			}catch (SocketTimeoutException ex){
 //				sendSocket.send(sendPacket);
 			} catch (SocketException e) {

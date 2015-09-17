@@ -255,6 +255,21 @@ public class GamePanel extends JPanel{
     	}
 		repaint();
     }
+    
+    public void updatePositions(GameStatus st){
+    	synchronized (status) {
+    		status = st;
+    		overallProgressBarModel.setValue((int) (status.rate*100));
+			progressPercent.setText(String.valueOf((new DecimalFormat("#.##").format(status.rate))) + "/" + setting.maxDropOffRate);
+			for (Player p : status.players) {
+				if (p.getId().equals(id)) {
+					individualProgressBarModel.setValue((int) (p.getDropOffs()*100));
+					player = p;
+				}
+			}
+    	}
+		repaint();
+    }
 }
 
 class AvatarMover implements Runnable{

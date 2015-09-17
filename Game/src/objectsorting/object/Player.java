@@ -1,13 +1,18 @@
 package objectsorting.object;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 
 import objects.Util;
 
-public class Player {
+public class Player implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String id = "";
-	private InetAddress ipAdress;
-	private int port;
+	private transient InetAddress ipAdress;
+	private transient int port;
 	private boolean sourceAttender = true;
 	private int carrying = 0; // 1 for blue 2 for white
 	private int[] position;
@@ -15,7 +20,7 @@ public class Player {
 	private boolean recentlyChanged = false;
 	private int dropOffs = 0;
 	
-	public static final String SEPERATOR = "_";
+	public transient static final String SEPERATOR = "_";
 	
 	public Player(String s) {
 		String[] split = s.split(SEPERATOR);

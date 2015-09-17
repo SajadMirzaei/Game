@@ -1,9 +1,18 @@
 package objectsorting.object;
 
-public class Source {
+import java.awt.Color;
+import java.io.Serializable;
+
+public class Source implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String id = "";
 	private int[] position;
 	private double firstTypeProductionRate;
+	private int size;
+	private Color color;
 	
 	public Source(String id, int[] position, double rate) {
 		this.id = id;
@@ -32,5 +41,17 @@ public class Source {
 	}
 	public void setFirstTypeProductionRate(double firstTypeProductionRate) {
 		this.firstTypeProductionRate = firstTypeProductionRate;
+	}
+	public int getSize() {
+		return size;
+	}
+	public void setSize(int size) {
+		this.size = size;
+	}
+	public void setColor(Color color) {
+		this.color = color;
+	}
+	public Color getColor() {
+		return color;
 	}
 }

@@ -4,7 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -30,7 +32,6 @@ import objectsorting.object.Player;
 import objectsorting.object.Setting;
 import objectsorting.object.Sink;
 import objectsorting.object.Source;
-
 import shuffling.WaveManager;
 import shuffling.ObjectSortingGame;
 
@@ -541,24 +542,45 @@ class Sender implements Runnable {
 			e.printStackTrace();
 		}
 	}
+	
+	public void send(byte[] b) {
+		// System.out.println("Sending: " + s);
+		DatagramPacket sendPacket = new DatagramPacket(b,
+				b.length, server.group, Util.MULTI_PORT);
+		try {
+			sendSocket.send(sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public void run() {
 		while (true) {
 			try {
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				ObjectOutputStream oos = new ObjectOutputStream(baos);
 				if (server.started) {
-					// String positionData = server.getDataFromPositions();
 					String positionData = server.status.toString();
-					send(positionData);
+					oos.writeObject(server.status);
+					send(baos.toByteArray());
+//					send(positionData);
 					Thread.sleep(10);
 				} else if (server.startButtonPushed) {
-					send(server.setting.toString());
+					oos.writeObject(server.setting);
+					send(baos.toByteArray());
+//					send(server.setting.toString());
 					Thread.sleep(1000);
 				} else {
 					Thread.sleep(1000);
 				}
+				baos.flush();
+				baos.close();
+				oos.close();
 			} catch (InterruptedException e) {
 				server.clientTextArea.append(e.toString());
+				e.printStackTrace();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}

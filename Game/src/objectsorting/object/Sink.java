@@ -1,9 +1,34 @@
 package objectsorting.object;
 
-public class Sink {
+import java.awt.Color;
+import java.io.Serializable;
+
+public class Sink implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String id;
 	private int [] position;
 	private boolean acceptingFirstTypeObject;
+	private int size;
+	private Color color;
+	public int getSize() {
+		return size;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
+	}
+
+	public Color getColor() {
+		return color;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
+	}
+
 	public Sink(String string, int[] is, boolean b) {
 		this.id = string;
 		this.position = is;

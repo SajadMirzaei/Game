@@ -1,5 +1,6 @@
 package objectsorting.object;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,14 +8,18 @@ import java.util.Map;
 
 import objects.Util;
 
-public class GameStatus {
+public class GameStatus implements Serializable{
 	
-	public long startTimeMillis; 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	public transient long startTimeMillis; 
 	public List<Player> players = new ArrayList<>();
-	public Map<String, List<Long>> playerDropOffMap = new HashMap<String, List<Long>>();
+	public transient Map<String, List<Long>> playerDropOffMap = new HashMap<String, List<Long>>();
 	public double rate;
 	
-	public Setting setting;
+	public transient Setting setting;
 
 	public GameStatus(String s) {
 		String[] objects = s.split(Util.MAJOR_SEPERATOR);

@@ -18,6 +18,8 @@ public class Setting {
 	public int timeWindow;
 	public int maxDropOffRate;
 	public int gameEndCriterion;
+	
+	public int[] screenSize = new int[]{1500,750};
 
 	public Setting() {
 		// TODO Auto-generated constructor stub
@@ -56,8 +58,10 @@ public class Setting {
 				}
 			}
 		}
-		maxDropOffRate = Integer.valueOf(settings[settings.length-2]);
-		gameEndCriterion = Integer.valueOf(settings[settings.length-1]);
+		maxDropOffRate = Integer.valueOf(settings[settings.length-3]);
+		gameEndCriterion = Integer.valueOf(settings[settings.length-2]);
+		String[] dimension = settings[settings.length-1].split(Util.POSITION_SEPERATOR);
+		screenSize = new int[]{Integer.valueOf(dimension[0]), Integer.valueOf(dimension[1])};
 	}
 
 	@Override
@@ -96,6 +100,7 @@ public class Setting {
 				+ Util.ID_SEPERATOR + line2Position;
 		settingString += Util.MAJOR_SEPERATOR + maxDropOffRate;
 		settingString += Util.MAJOR_SEPERATOR + gameEndCriterion;
+		settingString += Util.MAJOR_SEPERATOR + screenSize[0] + Util.POSITION_SEPERATOR + screenSize[1];
 		return settingString;
 	}
 }

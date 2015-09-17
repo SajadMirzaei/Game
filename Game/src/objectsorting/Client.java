@@ -42,8 +42,6 @@ public class Client extends JFrame{
 	public boolean started = false;
 	public boolean connected = false;
 	
-	public static final Dimension SCREEN_SIZE = new Dimension(1500,750);
-	
 	public Setting setting;
 	
 	static{
@@ -123,9 +121,9 @@ public class Client extends JFrame{
 		JFrame frame = new JFrame("Client");
 		try {
 			JPanel infoPanel = new JPanel();
-			infoPanel.setPreferredSize(new Dimension(SCREEN_SIZE.width, 50));
+			infoPanel.setPreferredSize(new Dimension(setting.screenSize[0], 50));
 			gamePanel = new GamePanel(this, infoPanel);
-			gamePanel.setPreferredSize(SCREEN_SIZE);
+			gamePanel.setPreferredSize(new Dimension(setting.screenSize[0], setting.screenSize[1]));
 			frame.getContentPane()
 			.add(infoPanel, BorderLayout.NORTH);
 			frame.getContentPane()
@@ -135,7 +133,7 @@ public class Client extends JFrame{
 		}
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// frame.setLocation(new Point(100, 100));
-		frame.setSize(SCREEN_SIZE.width, SCREEN_SIZE.height+50);
+		frame.setSize(setting.screenSize[0], setting.screenSize[1]+50);
 		frame.setVisible(true);
 		frame.setResizable(false);
 	}

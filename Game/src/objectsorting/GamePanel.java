@@ -105,7 +105,7 @@ public class GamePanel extends JPanel{
     	progressBarPannel.add(new JLabel("Overall Progress"));
     	progressBarPannel.add(new JProgressBar(overallProgressBarModel));
 //    	progressBarPannel.add(progressPercent);
-    	progressBarPannel.setPreferredSize(new Dimension(500, 40));
+    	progressBarPannel.setPreferredSize(new Dimension(setting.screenSize[0]/2, 40));
     	progressBarPannel.setBackground(Color.white);
     	infoPanel.setBackground(Color.white);
     	infoPanel.add(progressBarPannel);

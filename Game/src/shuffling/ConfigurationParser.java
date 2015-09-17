@@ -9,6 +9,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import objects.Util;
+
 import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -38,7 +41,7 @@ public class ConfigurationParser {
     public void loadConfigFile(){
         SAXBuilder sxb = new SAXBuilder();
         try{
-           configDoc = sxb.build(new File(this.sConfigFile));
+           configDoc = sxb.build(Util.load(sConfigFile));
            rootElmt=configDoc.getRootElement();
         } 
         catch(Exception e){

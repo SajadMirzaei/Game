@@ -94,7 +94,13 @@ public class GamePanel extends JPanel{
     	this.client = client;
     	this.id = client.clientID;
     	this.setting = client.setting;
-    	
+    	for (Player p : setting.playerList) {
+			if (p.getId().equals(id)) {
+				player.setPosition(p.getPosition());
+				avatarLocation[0] = p.getPosition()[0];
+				avatarLocation[1] = p.getPosition()[1];
+			}
+		}
     	JPanel progressBarPannel = new JPanel();
     	progressBarPannel.setLayout(new GridLayout(2,2));
     	overallProgressBarModel = new DefaultBoundedRangeModel((int) (status.rate), 1, 0 , setting.maxDropOffRate*100);
@@ -109,22 +115,7 @@ public class GamePanel extends JPanel{
     	progressBarPannel.setBackground(Color.white);
     	infoPanel.setBackground(Color.white);
     	infoPanel.add(progressBarPannel);
-    	
-    	avatarLocation = new double[] {10,10};
     	setBackground(Color.LIGHT_GRAY);
-		try {
-			avatarSo = ImageIO.read(Util.load("icons/" + IMAGE_CURRENT_SOURCE));
-			avatarSi = ImageIO.read(Util.load("icons/" + IMAGE_CURRENT_SINK));
-			avatarC1 = ImageIO.read(Util.load("icons/" + IMAGE_CURRENT_CARRYING_1));
-			avatarC2 = ImageIO.read(Util.load("icons/" + IMAGE_CURRENT_CARRYING_2));
-			avatarCX = ImageIO.read(Util.load("icons/" + IMAGE_CURRENT_SINK_CARRYING_X));
-			otherAvatarSo = ImageIO.read(Util.load("icons/" + IMAGE_OTHER_SOURCE));
-			otherAvatarSi = ImageIO.read(Util.load("icons/" + IMAGE_OTHER_SINK));
-			otherAvatarSoC = ImageIO.read(Util.load("icons/" + IMAGE_OTHER_SOURCE_CARRYING));
-			otherAvatarSiC = ImageIO.read(Util.load("icons/" + IMAGE_OTHER_SINK_CARRYING));
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
 		BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 
 		// Create a new blank cursor.
@@ -143,32 +134,7 @@ public class GamePanel extends JPanel{
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-//            	lastScreenPoint= new Point(e.getX(), e.getY());
             	avatarMover.setDestination(new int[]{e.getX(), e.getY()});
-//            	if (sourceAttender) {
-//	            	if (e.getX() < line1Position) {
-//	            		lastRealPoint = new Point((int) e.getLocationOnScreen().getX()+1,(int) e.getLocationOnScreen().getY());
-//	            		r.mouseMove((int) e.getLocationOnScreen().getX()+1, (int) e.getLocationOnScreen().getY());
-//	            		lastScreenPoint = new Point(line1Position+1, e.getY());
-//					}
-//				}else{
-//					if (e.getX() > line2Position) {
-//	            		lastRealPoint = new Point((int) e.getLocationOnScreen().getX()-1,(int) e.getLocationOnScreen().getY());
-//	            		r.mouseMove((int) e.getLocationOnScreen().getX()-1, (int) e.getLocationOnScreen().getY());
-//	            		lastScreenPoint = new Point(line2Position-1, e.getY());
-//					}
-//				}
-//            	if (e.getY() < d.height/2) {
-//            		lastRealPoint = new Point((int) e.getLocationOnScreen().getX(),(int) e.getLocationOnScreen().getY()+1);
-//					r.mouseMove((int) e.getLocationOnScreen().getX(), (int) e.getLocationOnScreen().getY()+1);
-//				}
-//            	if (e.getY() > getSize().height-d.height/2) {
-//            		lastRealPoint = new Point((int) e.getLocationOnScreen().getX(),(int) e.getLocationOnScreen().getY()-1);
-//            		r.mouseMove((int) e.getLocationOnScreen().getX(), (int) e.getLocationOnScreen().getY()-1);
-//				}
-//            	playersPositions.put("1",new int[] {e.getX(), e.getY()});
-//            	repaint();
-//            	sendPosition();
             }
         });
         
@@ -201,39 +167,40 @@ public class GamePanel extends JPanel{
         synchronized (status) {
 			for (Player p : status.players) {
 				if (!p.getId().equals(player.getId())) {
-					if (p.getCarrying() != 0) {
-						if (p.isSourceAttender()) {
-							g.drawImage(otherAvatarSoC, p.getPosition()[0]-Util.PLAYER_SIZE/2, p.getPosition()[1]-Util.PLAYER_SIZE/2, Util.PLAYER_SIZE, Util.PLAYER_SIZE , null);
-						}else{
-							g.drawImage(otherAvatarSiC, p.getPosition()[0]-Util.PLAYER_SIZE/2, p.getPosition()[1]-Util.PLAYER_SIZE/2, Util.PLAYER_SIZE, Util.PLAYER_SIZE , null);
-						}
-        			}else{
-        				if (p.isSourceAttender()) {
-							g.drawImage(otherAvatarSo, p.getPosition()[0]-Util.PLAYER_SIZE/2, p.getPosition()[1]-Util.PLAYER_SIZE/2, Util.PLAYER_SIZE, Util.PLAYER_SIZE , null);
-						}else{
-							g.drawImage(otherAvatarSi, p.getPosition()[0]-Util.PLAYER_SIZE/2, p.getPosition()[1]-Util.PLAYER_SIZE/2, Util.PLAYER_SIZE, Util.PLAYER_SIZE , null);
-						}
-        			}
+					if (p.isSourceAttender()) {
+						g.setColor(setting.soOtherColor);
+						g.fillOval(p.getPosition()[0] - setting.soOtherSize/2, p.getPosition()[1] - setting.soOtherSize/2, setting.soOtherSize, setting.soOtherSize);
+						if (p.getCarrying() != 0) {
+							g.setColor(Color.black);
+							g.fillOval(p.getPosition()[0] - setting.soOtherSize/4, p.getPosition()[1] - setting.soOtherSize/4, setting.soOtherSize/2, setting.soOtherSize/2);
+	        			}
+					}else{
+						g.setColor(setting.siOtherColor);
+						g.fillOval(p.getPosition()[0] - setting.siOtherSize/2, p.getPosition()[1] - setting.siOtherSize/2, setting.siOtherSize, setting.siOtherSize);
+						if (p.getCarrying() != 0) {
+							g.setColor(Color.black);
+							g.fillOval(p.getPosition()[0] - setting.siOtherSize/4, p.getPosition()[1] - setting.siOtherSize/4, setting.siOtherSize/2, setting.siOtherSize/2);
+	        			}
+					}
 				}
 			}
 		}
+        if (player.isSourceAttender()) {
+    		g.setColor(setting.soSelfColor);
+			g.fillOval(player.getPosition()[0]-setting.soSelfSize/2, player.getPosition()[1]-setting.soSelfSize/2, setting.soSelfSize, setting.soSelfSize);
+		}else{
+			g.setColor(setting.siSelfColor);
+			g.fillOval(player.getPosition()[0] - setting.siSelfSize/2, player.getPosition()[1] - setting.siSelfSize/2, setting.siSelfSize, setting.siSelfSize);
+		}
         if (player.getCarrying() != 0) {
         	if (player.isSourceAttender()) {
-        		if (player.getCarrying() == 1) {
-        			g.drawImage(avatarC1, (int) avatarLocation[0]-Util.PLAYER_SIZE/2, (int) avatarLocation[1]-Util.PLAYER_SIZE/2, Util.PLAYER_SIZE, Util.PLAYER_SIZE , null);
-        		}else if (player.getCarrying() == 2){
-        			g.drawImage(avatarC2, (int) avatarLocation[0]-Util.PLAYER_SIZE/2, (int) avatarLocation[1]-Util.PLAYER_SIZE/2, Util.PLAYER_SIZE, Util.PLAYER_SIZE , null);
-        		}
+				g.setColor(player.getCarrying() == 1 ? Color.white : Color.blue);
+				g.fillOval(player.getPosition()[0] - setting.soSelfSize/4, player.getPosition()[1] - setting.soSelfSize/4, setting.soSelfSize/2, setting.soSelfSize/2);
 			}else{
-				g.drawImage(avatarCX, (int) avatarLocation[0]-Util.PLAYER_SIZE/2, (int) avatarLocation[1]-Util.PLAYER_SIZE/2, Util.PLAYER_SIZE, Util.PLAYER_SIZE , null);
+				g.setColor(Color.black);
+				g.fillOval(player.getPosition()[0] - setting.siSelfSize/4, player.getPosition()[1] - setting.siSelfSize/4, setting.siSelfSize/2, setting.siSelfSize/2);
 			}
-		}else {
-			if (player.isSourceAttender()) {
-				g.drawImage(avatarSo, (int) avatarLocation[0]-Util.PLAYER_SIZE/2, (int) avatarLocation[1]-Util.PLAYER_SIZE/2, Util.PLAYER_SIZE, Util.PLAYER_SIZE , null);
-			}else{
-				g.drawImage(avatarSi, (int) avatarLocation[0]-Util.PLAYER_SIZE/2, (int) avatarLocation[1]-Util.PLAYER_SIZE/2, Util.PLAYER_SIZE, Util.PLAYER_SIZE , null);
-			}
-    	}
+        }
     }
     
     public void sendPosition() {
@@ -241,20 +208,20 @@ public class GamePanel extends JPanel{
 		client.sender.send(data);
 	}
     
-    public void updatePositions(String received){
-    	synchronized (status) {
-    		status = new GameStatus(received);
-    		overallProgressBarModel.setValue((int) (status.rate*100));
-			progressPercent.setText(String.valueOf((new DecimalFormat("#.##").format(status.rate))) + "/" + setting.maxDropOffRate);
-			for (Player p : status.players) {
-				if (p.getId().equals(id)) {
-					individualProgressBarModel.setValue((int) (p.getDropOffs()*100));
-					player = p;
-				}
-			}
-    	}
-		repaint();
-    }
+//    public void updatePositions(String received){
+//    	synchronized (status) {
+//    		status = new GameStatus(received);
+//    		overallProgressBarModel.setValue((int) (status.rate*100));
+//			progressPercent.setText(String.valueOf((new DecimalFormat("#.##").format(status.rate))) + "/" + setting.maxDropOffRate);
+//			for (Player p : status.players) {
+//				if (p.getId().equals(id)) {
+//					individualProgressBarModel.setValue((int) (p.getDropOffs()*100));
+//					player = p;
+//				}
+//			}
+//    	}
+//		repaint();
+//    }
     
     public void updatePositions(GameStatus st){
     	synchronized (status) {
@@ -265,6 +232,19 @@ public class GamePanel extends JPanel{
 				if (p.getId().equals(id)) {
 					individualProgressBarModel.setValue((int) (p.getDropOffs()*100));
 					player = p;
+					if (player.getCarrying() == 0) {
+						if (player.isSourceAttender()) {
+							avatarMover.setSpeed(setting.soSpeedUnladen);
+						}else{
+							avatarMover.setSpeed(setting.siSpeedUnladen);
+						}
+					}else{
+						if (player.isSourceAttender()) {
+							avatarMover.setSpeed(setting.soSpeedCarrying);
+						}else{
+							avatarMover.setSpeed(setting.siSpeedCarrying);
+						}
+					}
 				}
 			}
     	}

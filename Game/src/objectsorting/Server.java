@@ -139,11 +139,33 @@ public class Server extends JFrame {
 			while (iterator.hasNext()) {
 				Element element = iterator.next();
 				if (element.getName().equals("GeneralSetting")) {
-					Element child = element.getChild("ScreenSize");
-					setting.screenSize[0] = Integer.valueOf(child
+					Element screenSizeChild = element.getChild("ScreenSize");
+					setting.screenSize[0] = Integer.valueOf(screenSizeChild
 							.getAttributeValue("x"));
-					setting.screenSize[1] = Integer.valueOf(child
+					setting.screenSize[1] = Integer.valueOf(screenSizeChild
 							.getAttributeValue("y"));
+					Element settingElement = element.getChild("SourceAttender");
+					Element colorElement = settingElement.getChild("SelfColor");
+					Color color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
+					setting.soSelfColor = color;
+					colorElement = settingElement.getChild("OtherColor");
+					color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
+					setting.soOtherColor = color;
+					setting.soSelfSize = Integer.valueOf(settingElement.getChild("SelfSize").getValue());
+					setting.soOtherSize = Integer.valueOf(settingElement.getChild("OtherSize").getValue());
+					setting.soSpeedCarrying = Integer.valueOf(settingElement.getChild("SpeedCarrying").getValue());
+					setting.soSpeedUnladen = Integer.valueOf(settingElement.getChild("SpeedUnladen").getValue());
+					settingElement = element.getChild("SinkAttender");
+					colorElement = settingElement.getChild("SelfColor");
+					color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
+					setting.siSelfColor = color;
+					colorElement = settingElement.getChild("OtherColor");
+					color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
+					setting.siOtherColor = color;
+					setting.siSelfSize = Integer.valueOf(settingElement.getChild("SelfSize").getValue());
+					setting.siOtherSize = Integer.valueOf(settingElement.getChild("OtherSize").getValue());
+					setting.siSpeedCarrying = Integer.valueOf(settingElement.getChild("SpeedCarrying").getValue());
+					setting.siSpeedUnladen = Integer.valueOf(settingElement.getChild("SpeedUnladen").getValue());
 					// SOURCE READ
 				} else if (element.getName().equals("SourceDescription")) {
 					setting.line1Position = Integer.valueOf(element.getChild(
@@ -416,7 +438,7 @@ public class Server extends JFrame {
 						int x2 = otherPlayers.getPosition()[0];
 						int y2 = otherPlayers.getPosition()[1];
 						if (Math.sqrt(Math.pow(x1 - x2, 2)
-								+ Math.pow(y1 - y2, 2)) < Util.PLAYER_SIZE) {
+								+ Math.pow(y1 - y2, 2)) < setting.soOtherSize) {
 							status.playerDropOffMap.get(player.getId()).add(
 									System.currentTimeMillis());
 							otherPlayers.setCarrying(player.getCarrying());
@@ -430,10 +452,10 @@ public class Server extends JFrame {
 					int[] sourcePosition = source.getPosition();
 					if (position[0] > sourcePosition[0]
 							&& position[0] < sourcePosition[0]
-									+ Util.SOURCE_SIZE
+									+ source.getSize()
 							&& position[1] > sourcePosition[1]
 							&& position[1] < sourcePosition[1]
-									+ Util.SOURCE_SIZE) {
+									+ source.getSize()) {
 						double randomNumber = Math.random();
 						if (randomNumber < source.getFirstTypeProductionRate()) {
 							player.setCarrying(1);
@@ -448,9 +470,9 @@ public class Server extends JFrame {
 				for (Sink sink : setting.sinkList) {
 					int[] sinkPosition = sink.getPosition();
 					if (position[0] > sinkPosition[0]
-							&& position[0] < sinkPosition[0] + Util.SOURCE_SIZE
+							&& position[0] < sinkPosition[0] + sink.getSize()
 							&& position[1] > sinkPosition[1]
-							&& position[1] < sinkPosition[1] + Util.SOURCE_SIZE) {
+							&& position[1] < sinkPosition[1] + sink.getSize()) {
 						if ((player.getCarrying() == 1 && sink
 								.isAcceptingFirstTypeObject())
 								|| (player.getCarrying() == 2 && !sink
@@ -471,7 +493,7 @@ public class Server extends JFrame {
 						int x2 = otherPlayers.getPosition()[0];
 						int y2 = otherPlayers.getPosition()[1];
 						if (Math.sqrt(Math.pow(x1 - x2, 2)
-								+ Math.pow(y1 - y2, 2)) < Util.PLAYER_SIZE) {
+								+ Math.pow(y1 - y2, 2)) < setting.siOtherSize) {
 							status.playerDropOffMap.get(otherPlayers.getId())
 									.add(System.currentTimeMillis());
 							player.setCarrying(otherPlayers.getCarrying());
@@ -488,9 +510,9 @@ public class Server extends JFrame {
 			for (Base base : setting.baseList) {
 				int[] basePosition = base.getPosition();
 				if (position[0] > basePosition[0]
-						&& position[0] < basePosition[0] + Util.SOURCE_SIZE
+						&& position[0] < basePosition[0] + base.getSize()
 						&& position[1] > basePosition[1]
-						&& position[1] < basePosition[1] + Util.SOURCE_SIZE) {
+						&& position[1] < basePosition[1] + base.getSize()) {
 					inside = true;
 					if (!player.isRecentlyChanged()) {
 						player.setSourceAttender(!player.isSourceAttender());

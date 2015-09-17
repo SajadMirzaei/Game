@@ -94,18 +94,18 @@ public class Client extends JFrame{
 		senderThread.start();
 	}
 	
-	public void updateClient(String s){
-		if (s.contains("setting")) {
-			setting = new Setting(s);
-			connected = true;
-		}else if (s.contains("status")){
-			if (!started) {
-				started = true;
-				initiateGamePanel();
-			}
-			gamePanel.updatePositions(s);
-		}
-	}
+//	public void updateClient(String s){
+//		if (s.contains("setting")) {
+//			setting = new Setting(s);
+//			connected = true;
+//		}else if (s.contains("status")){
+//			if (!started) {
+//				started = true;
+//				initiateGamePanel();
+//			}
+//			gamePanel.updatePositions(s);
+//		}
+//	}
 	
 	public void updateClient(byte[] b){
 	    try {
@@ -127,16 +127,6 @@ public class Client extends JFrame{
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
 		}
-//		if (s.contains("setting")) {
-//			setting = new Setting(s);
-//			connected = true;
-//		}else if (s.contains("status")){
-//			if (!started) {
-//				started = true;
-//				initiateGamePanel();
-//			}
-//			gamePanel.updatePositions(s);
-//		}
 	}
 	
 	public void initiateWaitingDialog(){

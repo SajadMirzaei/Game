@@ -3,9 +3,25 @@
 
 	<GeneralSetting>
 		<ScreenSize x="500" y="500"/>
+		<SourceAttender>
+			<SelfColor r="0" g="128" b="0"/>
+			<OtherColor r="0" g="255" b="0"/>
+			<SelfSize>30</SelfSize>
+			<OtherSize>30</OtherSize>
+			<SpeedCarrying>10</SpeedCarrying>
+			<SpeedUnladen>20</SpeedUnladen>
+		</SourceAttender>
+		<SinkAttender>
+			<SelfColor r="255" g="165" b="0"/>
+			<OtherColor r="255" g="0" b="0"/>
+			<SelfSize>30</SelfSize>
+			<OtherSize>30</OtherSize>
+			<SpeedCarrying>10</SpeedCarrying>
+			<SpeedUnladen>20</SpeedUnladen>
+		</SinkAttender>
 	</GeneralSetting>
 	<SourceDescription>
-		<LeftBoundary>100</LeftBoundary>
+		<LeftBoundary>50</LeftBoundary>
 		<Source Number="1">
 			<Rate>0</Rate>
 			<Proportion>0.5</Proportion>
@@ -21,7 +37,7 @@
 	</SourceDescription>
 	
 	<SinkDescription>
-		<RightBoundary>100</RightBoundary>
+		<RightBoundary>450</RightBoundary>
 		<Sink Number="1">
 			<TargetColor>1</TargetColor>
 			<Location> 
@@ -65,7 +81,7 @@
 			<Size>2</Size>
 			<Location>
 				<X>400</X>
-				<Y>10</Y>
+				<Y>50</Y>
 			</Location>
 			<LeftBoundary>0</LeftBoundary>
 			<RightBoundary>1100</RightBoundary>
@@ -94,8 +110,8 @@
 			<Type>2</Type>
 			<Size>2</Size>
 			<Location>
-				<X>1</X>
-				<Y>1</Y>
+				<X>30</X>
+				<Y>30</Y>
 			</Location>
 			<LeftBoundary>400</LeftBoundary>
 			<RightBoundary>1500</RightBoundary>
@@ -114,7 +130,7 @@
 			<Type>2</Type>
 			<Size>2</Size>
 			<Location>
-				<X>15</X>
+				<X>35</X>
 				<Y>475</Y>
 			</Location>
 			<LeftBoundary>400</LeftBoundary>

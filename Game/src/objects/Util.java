@@ -23,11 +23,6 @@ public final class Util {
 	public static final String OBJ_LINE_ONE = "l1";
 	public static final String OBJ_LINE_TWO = "l2";
 	
-	public static final int SOURCE_SIZE = 70;
-	public static final int PLAYER_SIZE = 30;
-	
-	
-	
 	public static InputStream load(String path){
 		InputStream input = Util.class.getResourceAsStream(path);
 		if (input == null){

@@ -1,5 +1,6 @@
 package objectsorting.object;
 
+import java.awt.Color;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,24 @@ public class Setting implements Serializable{
 	public int gameEndCriterion;
 	
 	public int[] screenSize = new int[]{1500,750};
+	
+	public Color soSelfColor;
+	public Color soOtherColor;
+	public Color siSelfColor;
+	public Color siOtherColor;
+	
+	public int soSelfSize;
+	public int soOtherSize;
+	public int siSelfSize;
+	public int siOtherSize;
+	
+	public int soSpeedCarrying;
+	public int soSpeedUnladen;
+	public int siSpeedCarrying;
+	public int siSpeedUnladen;
+	
+	public int objectCarryingSize = 10;
+	public Color objectCarryingColor = Color.black;
 
 	public Setting() {
 		// TODO Auto-generated constructor stub

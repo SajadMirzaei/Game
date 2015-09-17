@@ -80,7 +80,7 @@ public class GamePanel0 extends JPanel{
     	add(progressPercent);
     	this.client = client;
     	this.id = client.clientID;
-    	this.settingString = client.settingString;
+//    	this.settingString = client.settingString;
     	initiateSettings();
     	setBackground(Color.LIGHT_GRAY);
 		try {

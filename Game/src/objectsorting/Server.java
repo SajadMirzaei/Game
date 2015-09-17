@@ -31,6 +31,9 @@ import objectsorting.object.Setting;
 import objectsorting.object.Sink;
 import objectsorting.object.Source;
 
+import shuffling.WaveManager;
+import shuffling.ObjectSortingGame;
+
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.SAXBuilder;
@@ -51,16 +54,79 @@ public class Server extends JFrame {
 	
 	public Setting setting;
 	public GameStatus status;
-
+        public WaveManager wavemngr;
+        
+        private String sconfig;
+        private int playInitialPos[][];
+        
 	public Server() throws Exception {
 		super("Server");
 		status = new GameStatus();
-		readConfigs("../setting.xml");
+                sconfig="setting.xml";
+                readConfigs(sconfig);
+                
+                //save initial player positions
+                int numOfPlayers=status.players.size();
+                playInitialPos=new int[numOfPlayers][2];
+                for(int i=0;i<numOfPlayers;i++){
+                    playInitialPos[i]=status.players.get(i).getPosition();
+                }
+		
 		status.setSetting(setting);
 		initializeFrame();
 		started = false;
+                
+                wavemngr=new WaveManager(this);
+                wavemngr.loadConfiguration(sconfig);
 	}
-
+                
+        public void stopCurrentGame(){
+            synchronized (this) {
+                started = false;
+                startButtonPushed=false;
+            }
+            clientTextArea.append("Current game is finished or time out! \n");
+            
+//            try {
+//                Thread.sleep(15000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+        }
+        
+        public void broadCastAllFinished(){
+            synchronized (this) {
+                started = false;
+                startButtonPushed=false;
+            }
+            clientTextArea.append("All the waves has been finished! \n");           
+        }
+        
+        private void initialGameInfo(){
+            //reset to the initial positions
+            int numOfPlayers=status.players.size();
+            for(int i=0;i<numOfPlayers;i++){                   
+                updateStatus(status.players.get(i), playInitialPos[i]);
+            }
+        }
+        
+        public void startNewGame(ObjectSortingGame curGame){
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+            clientTextArea.append("New game started! \n");
+            initialGameInfo();
+            
+            synchronized (this) {
+                started = true;
+                startButtonPushed=true;
+            }
+            
+        }
+        
 	private void readConfigs(String url) {
 		setting = new Setting();
 		SAXBuilder sxb = new SAXBuilder();
@@ -205,6 +271,7 @@ public class Server extends JFrame {
 					// System.out.println("startButtonPushed = true");
 					startButtonPushed = true;
 				}
+                                wavemngr.start(); //start the thread
 			}
 		});
 		getContentPane().add(clientPane, BorderLayout.NORTH);
@@ -217,7 +284,7 @@ public class Server extends JFrame {
 			}
 		});
 
-		// Set up
+		// Set up 
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		pack();
 		setSize(new Dimension(300, 300));
@@ -260,7 +327,7 @@ public class Server extends JFrame {
 							+ inetAddress + "\n");
 				}
 			} else {
-				// ACKNOWLEDGMENT by client in sent
+				// ACKNOWLEDGMENT by client in sent 
 				String[] splited = sentence.split(Util.ID_SEPERATOR);
 				readyClients.add(splited[0]);
 				if (readyClients.size() == status.getNumberOfAssignedPlayers()) {
@@ -273,7 +340,7 @@ public class Server extends JFrame {
 				}
 			}
 		} else {
-			// Update positions
+			// Update positions 
 			String[] data = sentence.split(Util.ID_SEPERATOR);
 			int[] position = new int[] {
 					Integer.valueOf(data[1].split(Util.POSITION_SEPERATOR)[0]),

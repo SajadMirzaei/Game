@@ -118,9 +118,69 @@
 		</Player>
 	</PlayerDescription>
 	
-<FeedbackDisplay>
-   <TimeWindow>60</TimeWindow>
-   <MaxDropOffRate>20</MaxDropOffRate>
-   <GameEndCriterion>15</GameEndCriterion>
-</FeedbackDisplay>
+	<FeedbackDisplay>
+	   <TimeWindow>60</TimeWindow>
+	   <MaxDropOffRate>20</MaxDropOffRate>
+	   <GameEndCriterion>15</GameEndCriterion>
+	</FeedbackDisplay>
+
+	<WaveDescription Number="1">
+	    <Game Description="1">
+	      <Players>
+	       	<Player>1</Player>
+	       	<Player>2</Player>
+	       	<Player>3</Player>
+	      	<Player>4</Player>
+	      	<Player>5</Player>
+	      	<Player>6</Player>
+	      </Players>
+	      <GameParameters>
+	        <TimeOut>60000</TimeOut>
+	        <DifferentGroup>0</DifferentGroup>
+	      </GameParameters>
+	    </Game>
+	    <Game Description="2">
+	      <Players>
+	       <Player>1</Player>
+	       <Player>2</Player>
+	       <Player>3</Player>
+	       <Player>4</Player>
+	      </Players>
+	      <GameParameters>
+	        <TimeOut>120000</TimeOut>
+	        <DifferentGroup>0</DifferentGroup>
+	      </GameParameters>
+	    </Game>
+	</WaveDescription>
+	
+	<WaveDescription Number="2">
+    <Game Description="1">
+      <Players>
+       	<Player>1</Player>
+       	<Player>2</Player>
+       	<Player>3</Player>
+      	<Player>4</Player>
+      	<Player>5</Player>
+      	<Player>6</Player>
+      </Players>
+      <GameParameters>
+        <TimeOut>1000000</TimeOut>
+        <DifferentGroup>0</DifferentGroup>
+      </GameParameters>
+    </Game>
+    <Game Description="2">
+      <Players>
+       <Player>1</Player>
+       <Player>2</Player>
+       <Player>3</Player>
+       <Player>4</Player>
+      </Players>
+      <GameParameters>
+        <TimeOut>1000000</TimeOut>
+        <DifferentGroup>0</DifferentGroup>
+      </GameParameters>
+    </Game>
+	</WaveDescription>
+	
+	<IntermissionPreLife>10</IntermissionPreLife>
 </ExperimentDescription>

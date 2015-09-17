@@ -179,18 +179,18 @@ public class GamePanel extends JPanel{
         super.paintComponent(g);
         for (Source source : setting.sourceList) {
         	int[] position = source.getPosition();
-        	g.setColor(Color.BLACK);
-			g.fillRect(position[0], position[1], Util.SOURCE_SIZE, Util.SOURCE_SIZE);
+        	g.setColor(source.getColor());
+			g.fillRect(position[0], position[1], source.getSize(), source.getSize());
 		}
         for (Sink sink : setting.sinkList) {
         	int[] position = sink.getPosition();
-        	g.setColor(sink.isAcceptingFirstTypeObject() ? Color.BLUE : Color.WHITE);
-			g.fillRect(position[0], position[1], Util.SOURCE_SIZE, Util.SOURCE_SIZE);
+        	g.setColor(sink.getColor());
+			g.fillRect(position[0], position[1], sink.getSize(), sink.getSize());
 		}
         for (Base base : setting.baseList) {
         	int[] position = base.getPosition();
-        	g.setColor(Color.ORANGE);
-			g.fillRect(position[0], position[1], Util.SOURCE_SIZE, Util.SOURCE_SIZE);
+        	g.setColor(base.getColor());
+			g.fillRect(position[0], position[1], base.getSize(), base.getSize());
 		}
         g.setColor(Color.RED);
         if (player.isSourceAttender()) {

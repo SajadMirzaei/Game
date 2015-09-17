@@ -1,6 +1,7 @@
 package objectsorting;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -139,9 +140,12 @@ public class Server extends JFrame {
 				Element element = iterator.next();
 				if (element.getName().equals("GeneralSetting")) {
 					Element child = element.getChild("ScreenSize");
-					setting.screenSize[0] = Integer.valueOf(child.getAttributeValue("x"));
-					setting.screenSize[1] = Integer.valueOf(child.getAttributeValue("y"));
-				}else if (element.getName().equals("SourceDescription")) {
+					setting.screenSize[0] = Integer.valueOf(child
+							.getAttributeValue("x"));
+					setting.screenSize[1] = Integer.valueOf(child
+							.getAttributeValue("y"));
+					// SOURCE READ
+				} else if (element.getName().equals("SourceDescription")) {
 					setting.line1Position = Integer.valueOf(element.getChild(
 							"LeftBoundary").getValue());
 					List<Element> sourceList = element.getChildren("Source");
@@ -158,8 +162,18 @@ public class Server extends JFrame {
 						source.setFirstTypeProductionRate(Double
 								.valueOf(sourceElement.getChild("Proportion")
 										.getValue()));
+						source.setSize(Integer.valueOf(sourceElement
+								.getChild("Appearance").getChild("Size")
+								.getValue()));
+						Element colorElement = sourceElement.getChild("Appearance").getChild("Color");
+						source.setColor(new Color(Integer.valueOf(colorElement
+								.getAttributeValue("r")), Integer
+								.valueOf(colorElement.getAttributeValue("g")),
+								Integer.valueOf(colorElement
+										.getAttributeValue("b"))));
 						setting.sourceList.add(source);
 					}
+					// SINK READ
 				} else if (element.getName().equals("SinkDescription")) {
 					setting.line2Position = Integer.valueOf(element.getChild(
 							"RightBoundary").getValue());
@@ -176,8 +190,18 @@ public class Server extends JFrame {
 										.getValue()) });
 						sink.setAcceptingFirstTypeObject(sinkElement
 								.getChild("TargetColor").getValue().equals("1"));
+						sink.setSize(Integer.valueOf(sinkElement
+								.getChild("Appearance").getChild("Size")
+								.getValue()));
+						Element colorElement = sinkElement.getChild("Appearance").getChild("Color");
+						sink.setColor(new Color(Integer.valueOf(colorElement
+								.getAttributeValue("r")), Integer
+								.valueOf(colorElement.getAttributeValue("g")),
+								Integer.valueOf(colorElement
+										.getAttributeValue("b"))));
 						setting.sinkList.add(sink);
 					}
+					// BASE READ
 				} else if (element.getName().equals("BaseDescription")) {
 					List<Element> baseList = element.getChildren();
 					for (Element baseElement : baseList) {
@@ -190,6 +214,15 @@ public class Server extends JFrame {
 								Integer.valueOf(baseElement
 										.getChild("Location").getChild("Y")
 										.getValue()) });
+						base.setSize(Integer.valueOf(baseElement
+								.getChild("Appearance").getChild("Size")
+								.getValue()));
+						Element colorElement = baseElement.getChild("Appearance").getChild("Color");
+						base.setColor(new Color(Integer.valueOf(colorElement
+								.getAttributeValue("r")), Integer
+								.valueOf(colorElement.getAttributeValue("g")),
+								Integer.valueOf(colorElement
+										.getAttributeValue("b"))));
 						if (baseElement.getAttribute("enabled")
 								.getBooleanValue()) {
 							setting.baseList.add(base);
@@ -542,11 +575,11 @@ class Sender implements Runnable {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void send(byte[] b) {
 		// System.out.println("Sending: " + s);
-		DatagramPacket sendPacket = new DatagramPacket(b,
-				b.length, server.group, Util.MULTI_PORT);
+		DatagramPacket sendPacket = new DatagramPacket(b, b.length,
+				server.group, Util.MULTI_PORT);
 		try {
 			sendSocket.send(sendPacket);
 		} catch (IOException e) {
@@ -561,15 +594,16 @@ class Sender implements Runnable {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				ObjectOutputStream oos = new ObjectOutputStream(baos);
 				if (server.started) {
-					String positionData = server.status.toString();
+					// String positionData = server.status.toString();
+					server.status.update();
 					oos.writeObject(server.status);
 					send(baos.toByteArray());
-//					send(positionData);
+					// send(positionData);
 					Thread.sleep(10);
 				} else if (server.startButtonPushed) {
 					oos.writeObject(server.setting);
 					send(baos.toByteArray());
-//					send(server.setting.toString());
+					// send(server.setting.toString());
 					Thread.sleep(1000);
 				} else {
 					Thread.sleep(1000);

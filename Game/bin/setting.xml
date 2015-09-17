@@ -10,12 +10,12 @@
 			<Rate>0</Rate>
 			<Proportion>0.5</Proportion>
 			<Location> 
-				<X>450</X>
+				<X>400</X>
 				<Y>250</Y>
 			</Location>
 			<Appearance>
-				<Color>1</Color>
-				<Size>1</Size>
+				<Color r="0" g="0" b="0"/>
+				<Size>70</Size>
 			</Appearance>
 		</Source>
 	</SourceDescription>
@@ -29,8 +29,8 @@
 				<Y>50</Y>
 			</Location>
 			<Appearance>
-				<Color>2</Color>
-				<Size>1</Size>
+				<Color r="0" g="0" b="0"/>
+				<Size>50</Size>
 			</Appearance>
 		</Sink>
 		<Sink Number="2">
@@ -40,8 +40,8 @@
 				<Y>250</Y>
 			</Location>
 			<Appearance>
-				<Color>2</Color>
-				<Size>1</Size>
+				<Color r="0" g="0" b="0"/>
+				<Size>40</Size>
 			</Appearance>
 		</Sink>
 	</SinkDescription>
@@ -53,7 +53,7 @@
 				<Y>10</Y>
 			</Location>
 			<Appearance>
-				<Color>3</Color>
+				<Color r="0" g="0" b="0"/>
 				<Size>10</Size>
 			</Appearance>
 		</Base>

@@ -98,6 +98,13 @@ public class GameStatus implements Serializable{
 		}
 	}
 	
+	public void update() {
+		for (Player p : players) {
+			p.setDropOffs(getIndividualRate(p.getId()));
+		}
+		rate = getOverallRate();
+	}
+	
 	public void setSetting(Setting setting) {
 		this.setting = setting;
 	}

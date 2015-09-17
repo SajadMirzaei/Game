@@ -209,7 +209,7 @@ class ClientUDPReceiver implements Runnable{
 			try{
 				receiverSocket.setSoTimeout(2000);
 				receiverSocket.receive(receivePacket);
-				String received = new String(receivePacket.getData(),0,receivePacket.getLength());
+//				String received = new String(receivePacket.getData(),0,receivePacket.getLength());
 //				System.out.println("Received: " + received);
 				client.updateClient(receivePacket.getData());
 //				client.updateClient(received);

@@ -24,7 +24,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 
 import objects.Util;
 import objectsorting.object.Base;
@@ -33,12 +32,13 @@ import objectsorting.object.Player;
 import objectsorting.object.Setting;
 import objectsorting.object.Sink;
 import objectsorting.object.Source;
-import shuffling.WaveManager;
-import shuffling.ObjectSortingGame;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.SAXBuilder;
+
+import shuffling.ObjectSortingGame;
+import shuffling.WaveManager;
 
 public class Server extends JFrame {
 

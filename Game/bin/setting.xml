@@ -28,7 +28,7 @@
 		<Source Number="1">
 			<Rate>0</Rate>
 			<Proportions>
-				<Object type="1" proportion="0.34"/>
+				<Object type="1" proportion="0.33"/>
 				<Object type="2" proportion="0.33"/>
 				<Object type="3" proportion="0.34"/>
 			</Proportions>

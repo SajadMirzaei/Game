@@ -14,7 +14,7 @@ public class Player implements Serializable{
 	private transient InetAddress ipAdress;
 	private transient int port;
 	private boolean sourceAttender = true;
-	private int carrying = 0; // 1 for blue 2 for white
+	private int carrying = 0;
 	private int[] position = new int[2];
 	private boolean assigned = false;
 	private boolean recentlyChanged = false;

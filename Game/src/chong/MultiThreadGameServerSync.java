@@ -18,7 +18,7 @@ public class MultiThreadGameServerSync {
 
   // This game server can accept up to maxClientsCount clients' connections.
   private static final int maxClientsCount = 10;
-  private static final clientThread[] threads = new clientThread[maxClientsCount];
+  private static final clientThread2[] threads = new clientThread2[maxClientsCount];
 
   public static void main(String args[]) {
 
@@ -51,7 +51,7 @@ public class MultiThreadGameServerSync {
         int i = 0;
         for (i = 0; i < maxClientsCount; i++) {
           if (threads[i] == null) {
-            (threads[i] = new clientThread(clientSocket, threads)).start();
+            (threads[i] = new clientThread2(clientSocket, threads)).start();
             break;
           }
         }
@@ -77,16 +77,16 @@ public class MultiThreadGameServerSync {
  * routes the private message to the particular client. When a client leaves the
  * game this thread informs also all the clients about that and terminates.
  */
-class clientThread extends Thread {
+class clientThread2 extends Thread {
 
   private String clientName = null;
   private DataInputStream is = null;
   private PrintStream os = null;
   private Socket clientSocket = null;
-  private final clientThread[] threads;
+  private final clientThread2[] threads;
   private int maxClientsCount;
 
-  public clientThread(Socket clientSocket, clientThread[] threads) {
+  public clientThread2(Socket clientSocket, clientThread2[] threads) {
     this.clientSocket = clientSocket;
     this.threads = threads;
     maxClientsCount = threads.length;
@@ -94,7 +94,7 @@ class clientThread extends Thread {
 
   public void run() {
     int maxClientsCount = this.maxClientsCount;
-    clientThread[] threads = this.threads;
+    clientThread2[] threads = this.threads;
 
     try {
       /*

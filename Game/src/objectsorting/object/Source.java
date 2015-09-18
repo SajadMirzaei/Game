@@ -2,6 +2,11 @@ package objectsorting.object;
 
 import java.awt.Color;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Source implements Serializable{
 	/**
@@ -10,14 +15,13 @@ public class Source implements Serializable{
 	private static final long serialVersionUID = 1L;
 	private String id = "";
 	private int[] position;
-	private double firstTypeProductionRate;
+	private Map<Integer,Double> proportionMap = new LinkedHashMap<>();
 	private int size;
 	private Color color;
 	
-	public Source(String id, int[] position, double rate) {
+	public Source(String id, int[] position) {
 		this.id = id;
 		this.position = position;
-		this.firstTypeProductionRate = rate;
 	}
 	
 	public Source() {
@@ -36,12 +40,6 @@ public class Source implements Serializable{
 	public void setPosition(int[] position) {
 		this.position = position;
 	}
-	public double getFirstTypeProductionRate() {
-		return firstTypeProductionRate;
-	}
-	public void setFirstTypeProductionRate(double firstTypeProductionRate) {
-		this.firstTypeProductionRate = firstTypeProductionRate;
-	}
 	public int getSize() {
 		return size;
 	}
@@ -54,4 +52,29 @@ public class Source implements Serializable{
 	public Color getColor() {
 		return color;
 	}
+
+	public Map<Integer, Double> getProportionMap() {
+		return proportionMap;
+	}
+
+	public void setProportionMap(Map<Integer, Double> proportionMap) {
+		this.proportionMap = proportionMap;
+	}
+	
+	public int produceRandomObject(){
+		double randomNumber = Math.random();
+		List<Double> proportions = new ArrayList<>();
+		for (int i : proportionMap.keySet()) {
+			proportions.add(proportionMap.get(i));
+		}
+		double sum = 0;
+		for (int i = 0; i < proportions.size(); i++) {
+			sum += proportionMap.get(i+1);
+			if (randomNumber < sum) {
+				return i+1;
+			}
+		}
+		return 0;
+	}
+	
 }

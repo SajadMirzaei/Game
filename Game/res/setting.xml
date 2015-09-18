@@ -3,6 +3,9 @@
 
 	<GeneralSetting>
 		<ScreenSize x="500" y="500"/>
+		<Object type="1" r="255" g="255" b="255"/>
+		<Object type="2" r="0" g="0" b="255"/>
+		<Object type="3" r="255" g="255" b="0"/>
 		<SourceAttender>
 			<SelfColor r="0" g="128" b="0"/>
 			<OtherColor r="0" g="255" b="0"/>
@@ -24,14 +27,18 @@
 		<LeftBoundary>50</LeftBoundary>
 		<Source Number="1">
 			<Rate>0</Rate>
-			<Proportion>0.5</Proportion>
+			<Proportions>
+				<Object type="1" proportion="0.34"/>
+				<Object type="2" proportion="0.33"/>
+				<Object type="3" proportion="0.34"/>
+			</Proportions>
 			<Location> 
 				<X>400</X>
 				<Y>250</Y>
 			</Location>
 			<Appearance>
 				<Color r="0" g="0" b="0"/>
-				<Size>70</Size>
+				<Size>80</Size>
 			</Appearance>
 		</Source>
 	</SourceDescription>
@@ -39,25 +46,36 @@
 	<SinkDescription>
 		<RightBoundary>450</RightBoundary>
 		<Sink Number="1">
-			<TargetColor>1</TargetColor>
+			<TargetType>1</TargetType>
 			<Location> 
 				<X>50</X>
 				<Y>50</Y>
 			</Location>
 			<Appearance>
-				<Color r="0" g="0" b="0"/>
+				<Color r="255" g="255" b="255"/>
 				<Size>50</Size>
 			</Appearance>
 		</Sink>
 		<Sink Number="2">
-			<TargetColor>2</TargetColor>
+			<TargetType>2</TargetType>
 			<Location> 
 				<X>50</X>
 				<Y>250</Y>
 			</Location>
 			<Appearance>
-				<Color r="0" g="0" b="0"/>
-				<Size>40</Size>
+				<Color r="0" g="0" b="255"/>
+				<Size>50</Size>
+			</Appearance>
+		</Sink>
+		<Sink Number="3">
+			<TargetType>3</TargetType>
+			<Location> 
+				<X>50</X>
+				<Y>450</Y>
+			</Location>
+			<Appearance>
+				<Color r="255" g="255" b="0"/>
+				<Size>50</Size>
 			</Appearance>
 		</Sink>
 	</SinkDescription>
@@ -78,63 +96,51 @@
 	<PlayerDescription>
 		<Player Number="1">
 			<Type>1</Type>
-			<Size>2</Size>
+			<SpeedMultiplier>5</SpeedMultiplier>
 			<Location>
 				<X>400</X>
 				<Y>50</Y>
 			</Location>
-			<LeftBoundary>0</LeftBoundary>
-			<RightBoundary>1100</RightBoundary>
 		</Player>
 		<Player Number="2">
 			<Type>2</Type>
-			<Size>2</Size>
+			<SpeedMultiplier>1</SpeedMultiplier>
 			<Location>
 				<X>100</X>
 				<Y>50</Y>
 			</Location>
-			<LeftBoundary>400</LeftBoundary>
-			<RightBoundary>1500</RightBoundary>
 		</Player>
 		<Player Number="3">
 			<Type>1</Type>
-			<Size>2</Size>
+			<SpeedMultiplier>1</SpeedMultiplier>
 			<Location>
 				<X>400</X>
 				<Y>200</Y>
 			</Location>
-			<LeftBoundary>0</LeftBoundary>
-			<RightBoundary>1100</RightBoundary>
 		</Player>
 		<Player Number="4">
 			<Type>2</Type>
-			<Size>2</Size>
+			<SpeedMultiplier>1</SpeedMultiplier>
 			<Location>
 				<X>30</X>
 				<Y>30</Y>
 			</Location>
-			<LeftBoundary>400</LeftBoundary>
-			<RightBoundary>1500</RightBoundary>
 		</Player>
 		<Player Number="5">
 			<Type>1</Type>
-			<Size>2</Size>
+			<SpeedMultiplier>1</SpeedMultiplier>
 			<Location>
 				<X>450</X>
 				<Y>375</Y>
 			</Location>
-			<LeftBoundary>0</LeftBoundary>
-			<RightBoundary>1100</RightBoundary>
 		</Player>
 		<Player Number="6">
 			<Type>2</Type>
-			<Size>2</Size>
+			<SpeedMultiplier>1</SpeedMultiplier>
 			<Location>
 				<X>35</X>
 				<Y>475</Y>
 			</Location>
-			<LeftBoundary>400</LeftBoundary>
-			<RightBoundary>1500</RightBoundary>
 		</Player>
 	</PlayerDescription>
 	

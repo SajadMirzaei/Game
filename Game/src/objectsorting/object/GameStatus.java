@@ -21,19 +21,19 @@ public class GameStatus implements Serializable{
 	
 	public transient Setting setting;
 
-	public GameStatus(String s) {
-		String[] objects = s.split(Util.MAJOR_SEPERATOR);
-		for (String string : objects) {
-			if (!string.contains("status")) {
-				if (string.contains(Util.OBJ_PLAYER)) {
-					Player p = new Player(string);
-					players.add(p);
-				}else{
-					rate = Double.valueOf(string);
-				}
-			}
-		}
-	}
+//	public GameStatus(String s) {
+//		String[] objects = s.split(Util.MAJOR_SEPERATOR);
+//		for (String string : objects) {
+//			if (!string.contains("status")) {
+//				if (string.contains(Util.OBJ_PLAYER)) {
+//					Player p = new Player(string);
+//					players.add(p);
+//				}else{
+//					rate = Double.valueOf(string);
+//				}
+//			}
+//		}
+//	}
 
 	public GameStatus() {
 	}

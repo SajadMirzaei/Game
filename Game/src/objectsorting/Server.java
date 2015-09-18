@@ -60,6 +60,8 @@ public class Server extends JFrame {
 
 	private String sconfig;
 	private int playInitialPos[][];
+	
+	private static Server server;
 
 	public Server() throws Exception {
 		super("Server");
@@ -144,6 +146,11 @@ public class Server extends JFrame {
 							.getAttributeValue("x"));
 					setting.screenSize[1] = Integer.valueOf(screenSizeChild
 							.getAttributeValue("y"));
+					List<Element> settingElements = element.getChildren("Object");
+					for (Element element2 : settingElements) {
+						Color color = new Color(Integer.valueOf(element2.getAttributeValue("r")),Integer.valueOf(element2.getAttributeValue("g")),Integer.valueOf(element2.getAttributeValue("b")));
+						setting.objectColors.put(Integer.valueOf(element2.getAttributeValue("type")), color);
+					}
 					Element settingElement = element.getChild("SourceAttender");
 					Element colorElement = settingElement.getChild("SelfColor");
 					Color color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
@@ -174,6 +181,15 @@ public class Server extends JFrame {
 					for (Element sourceElement : sourceList) {
 						Source source = new Source();
 						source.setId(sourceElement.getAttributeValue("Number"));
+						List<Element> objects = sourceElement.getChild("Proportions").getChildren();
+						double sum = 0;
+						for (Element element2 : objects) {
+							source.getProportionMap().put(Integer.valueOf(element2.getAttributeValue("type")), Double.valueOf(element2.getAttributeValue("proportion")));
+							sum += Double.valueOf(element2.getAttributeValue("proportion"));
+						}
+						if (sum != 1) {
+							throw new Exception("Proportion values should add up to 1");
+						}
 						source.setPosition(new int[] {
 								Integer.valueOf(sourceElement
 										.getChild("Location").getChild("X")
@@ -181,9 +197,6 @@ public class Server extends JFrame {
 								Integer.valueOf(sourceElement
 										.getChild("Location").getChild("Y")
 										.getValue()) });
-						source.setFirstTypeProductionRate(Double
-								.valueOf(sourceElement.getChild("Proportion")
-										.getValue()));
 						source.setSize(Integer.valueOf(sourceElement
 								.getChild("Appearance").getChild("Size")
 								.getValue()));
@@ -210,8 +223,7 @@ public class Server extends JFrame {
 								Integer.valueOf(sinkElement
 										.getChild("Location").getChild("Y")
 										.getValue()) });
-						sink.setAcceptingFirstTypeObject(sinkElement
-								.getChild("TargetColor").getValue().equals("1"));
+						sink.setAcceptingObject(Integer.valueOf(sinkElement.getChild("TargetType").getValue()));
 						sink.setSize(Integer.valueOf(sinkElement
 								.getChild("Appearance").getChild("Size")
 								.getValue()));
@@ -255,6 +267,7 @@ public class Server extends JFrame {
 					for (Element playerElement : playerList) {
 						Player player = new Player();
 						player.setId(playerElement.getAttributeValue("Number"));
+						player.setSpeedMultiplier(Double.valueOf(playerElement.getChild("SpeedMultiplier").getValue()));
 						player.setPosition(new int[] {
 								Integer.valueOf(playerElement
 										.getChild("Location").getChild("X")
@@ -281,40 +294,11 @@ public class Server extends JFrame {
 		} catch (Exception e) {
 			JDialog d = new JDialog(this);
 			d.getContentPane()
-					.add(new JTextField("Error Reading Setting File"));
+					.add(new JTextArea("Error Reading Setting File: \n" + e.getMessage()));
 			d.setSize(300, 300);
 			d.setVisible(true);
 			e.printStackTrace();
 		}
-	}
-
-	private void initializeGameSetup() {
-		if (setting == null) {
-			setting = new Setting();
-			Source so1 = new Source(Util.OBJ_SOURCE + 1,
-					new int[] { 400, 100 }, 0.5);
-			Source so2 = new Source(Util.OBJ_SOURCE + 2,
-					new int[] { 400, 300 }, 0.5);
-			Sink si1 = new Sink(Util.OBJ_SINK + 1, new int[] { 20, 300 }, true);
-			Sink si2 = new Sink(Util.OBJ_SINK + 2, new int[] { 20, 100 }, false);
-
-			setting.sourceList.add(so1);
-			setting.sourceList.add(so2);
-			setting.sinkList.add(si1);
-			setting.sinkList.add(si2);
-			// for (int i = 0; i < players.size(); i++) {
-			// Player p = players.get(i);
-			// if (i % 2 == 0) {
-			// p.setPosition(new int[] { 475, 100 });
-			// playersMap.put(p.getId(), p);
-			// } else {
-			// p.setPosition(new int[] { 25, 100 });
-			// playersMap.put(p.getId(), p);
-			// p.setSourceAttender(false);
-			// }
-			// }
-		}
-
 	}
 
 	public void startThreads() {
@@ -456,12 +440,7 @@ public class Server extends JFrame {
 							&& position[1] > sourcePosition[1]
 							&& position[1] < sourcePosition[1]
 									+ source.getSize()) {
-						double randomNumber = Math.random();
-						if (randomNumber < source.getFirstTypeProductionRate()) {
-							player.setCarrying(1);
-						} else {
-							player.setCarrying(2);
-						}
+						player.setCarrying(source.produceRandomObject());
 					}
 				}
 			}
@@ -473,10 +452,7 @@ public class Server extends JFrame {
 							&& position[0] < sinkPosition[0] + sink.getSize()
 							&& position[1] > sinkPosition[1]
 							&& position[1] < sinkPosition[1] + sink.getSize()) {
-						if ((player.getCarrying() == 1 && sink
-								.isAcceptingFirstTypeObject())
-								|| (player.getCarrying() == 2 && !sink
-										.isAcceptingFirstTypeObject())) {
+						if (player.getCarrying() == sink.getAcceptingObject()) {
 							status.playerDropOffMap.get(player.getId()).add(
 									System.currentTimeMillis());
 							player.setCarrying(0);
@@ -528,9 +504,14 @@ public class Server extends JFrame {
 
 	public static void main(String args[]) {
 		try {
-			Server server = new Server();
+			server = new Server();
 			server.startThreads();
 		} catch (Exception e) {
+			JDialog d = new JDialog(server);
+			d.getContentPane()
+					.add(new JTextArea("Error: \n" + e.getMessage() + "\n" + e.toString()));
+			d.setSize(300, 300);
+			d.setVisible(true);
 			e.printStackTrace();
 		}
 	}

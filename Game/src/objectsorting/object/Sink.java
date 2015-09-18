@@ -10,7 +10,7 @@ public class Sink implements Serializable{
 	private static final long serialVersionUID = 1L;
 	private String id;
 	private int [] position;
-	private boolean acceptingFirstTypeObject;
+	private int acceptingObject;
 	private int size;
 	private Color color;
 	public int getSize() {
@@ -29,16 +29,15 @@ public class Sink implements Serializable{
 		this.color = color;
 	}
 
-	public Sink(String string, int[] is, boolean b) {
+	public Sink(String string, int[] is) {
 		this.id = string;
 		this.position = is;
-		acceptingFirstTypeObject = b;
 	}
 	
 	public Sink() {
 		this.id = "";
 		this.position = new int[] {0,0};
-		acceptingFirstTypeObject = true;
+		acceptingObject = 1;
 	}
 	
 	public String getId() {
@@ -53,12 +52,12 @@ public class Sink implements Serializable{
 	public void setPosition(int[] position) {
 		this.position = position;
 	}
-	public boolean isAcceptingFirstTypeObject() {
-		return acceptingFirstTypeObject;
+
+	public int getAcceptingObject() {
+		return acceptingObject;
 	}
-	public void setAcceptingFirstTypeObject(boolean acceptingFirstTypeObject) {
-		this.acceptingFirstTypeObject = acceptingFirstTypeObject;
+
+	public void setAcceptingObject(int acceptingObject) {
+		this.acceptingObject = acceptingObject;
 	}
-	
-	
 }

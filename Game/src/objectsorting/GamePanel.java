@@ -57,25 +57,25 @@ public class GamePanel extends JPanel{
 	
 //	private double rate;
 	
-	BufferedImage avatarSo = null;
-	BufferedImage avatarSi = null;
-	BufferedImage avatarC1 = null;
-	BufferedImage avatarC2 = null;
-	BufferedImage avatarCX = null;
-	BufferedImage otherAvatarSo = null;
-	BufferedImage otherAvatarSi = null;
-	BufferedImage otherAvatarSoC = null;
-	BufferedImage otherAvatarSiC = null;
-	
-	private final String IMAGE_CURRENT_SOURCE = "green.png";
-	private final String IMAGE_CURRENT_SINK = "red.png";
-	private final String IMAGE_CURRENT_CARRYING_1 = "green+blue.png";
-	private final String IMAGE_CURRENT_CARRYING_2 = "green+white.png";
-	private final String IMAGE_CURRENT_SINK_CARRYING_X = "red+.png";
-	private final String IMAGE_OTHER_SOURCE = "lightGreen.png";
-	private final String IMAGE_OTHER_SINK = "lightRed.png";
-	private final String IMAGE_OTHER_SOURCE_CARRYING = "green+black.png";
-	private final String IMAGE_OTHER_SINK_CARRYING = "lightRed+.png";
+//	BufferedImage avatarSo = null;
+//	BufferedImage avatarSi = null;
+//	BufferedImage avatarC1 = null;
+//	BufferedImage avatarC2 = null;
+//	BufferedImage avatarCX = null;
+//	BufferedImage otherAvatarSo = null;
+//	BufferedImage otherAvatarSi = null;
+//	BufferedImage otherAvatarSoC = null;
+//	BufferedImage otherAvatarSiC = null;
+//	
+//	private final String IMAGE_CURRENT_SOURCE = "green.png";
+//	private final String IMAGE_CURRENT_SINK = "red.png";
+//	private final String IMAGE_CURRENT_CARRYING_1 = "green+blue.png";
+//	private final String IMAGE_CURRENT_CARRYING_2 = "green+white.png";
+//	private final String IMAGE_CURRENT_SINK_CARRYING_X = "red+.png";
+//	private final String IMAGE_OTHER_SOURCE = "lightGreen.png";
+//	private final String IMAGE_OTHER_SINK = "lightRed.png";
+//	private final String IMAGE_OTHER_SOURCE_CARRYING = "green+black.png";
+//	private final String IMAGE_OTHER_SINK_CARRYING = "lightRed+.png";
 	
 	public boolean started = false;
 	
@@ -150,7 +150,7 @@ public class GamePanel extends JPanel{
 		}
         for (Sink sink : setting.sinkList) {
         	int[] position = sink.getPosition();
-        	g.setColor(sink.getColor());
+        	g.setColor(player.isSourceAttender() ? Color.black : sink.getColor());
 			g.fillRect(position[0], position[1], sink.getSize(), sink.getSize());
 		}
         for (Base base : setting.baseList) {
@@ -194,7 +194,7 @@ public class GamePanel extends JPanel{
 		}
         if (player.getCarrying() != 0) {
         	if (player.isSourceAttender()) {
-				g.setColor(player.getCarrying() == 1 ? Color.white : Color.blue);
+				g.setColor(setting.objectColors.get(player.getCarrying()));
 				g.fillOval(player.getPosition()[0] - setting.soSelfSize/4, player.getPosition()[1] - setting.soSelfSize/4, setting.soSelfSize/2, setting.soSelfSize/2);
 			}else{
 				g.setColor(Color.black);
@@ -234,15 +234,15 @@ public class GamePanel extends JPanel{
 					player = p;
 					if (player.getCarrying() == 0) {
 						if (player.isSourceAttender()) {
-							avatarMover.setSpeed(setting.soSpeedUnladen);
+							avatarMover.setSpeed(setting.soSpeedUnladen*player.getSpeedMultiplier());
 						}else{
-							avatarMover.setSpeed(setting.siSpeedUnladen);
+							avatarMover.setSpeed(setting.siSpeedUnladen*player.getSpeedMultiplier());
 						}
 					}else{
 						if (player.isSourceAttender()) {
-							avatarMover.setSpeed(setting.soSpeedCarrying);
+							avatarMover.setSpeed(setting.soSpeedCarrying*player.getSpeedMultiplier());
 						}else{
-							avatarMover.setSpeed(setting.siSpeedCarrying);
+							avatarMover.setSpeed(setting.siSpeedCarrying*player.getSpeedMultiplier());
 						}
 					}
 				}
@@ -256,7 +256,7 @@ class AvatarMover implements Runnable{
 	
 	GamePanel gamePanel;
 	private int[] destination;
-	private int velocity = 15;
+	private double velocity = 15;
 	private long updateIntervalMillis = 10;
 	
 	public AvatarMover(GamePanel gamePanel, int speed) {
@@ -265,7 +265,7 @@ class AvatarMover implements Runnable{
 		destination = new int[] {(int) gamePanel.avatarLocation[0], (int) gamePanel.avatarLocation[1]};
 	}
 	
-	public void setSpeed(int speed) {
+	public void setSpeed(double speed) {
 		this.velocity = speed;
 	}
 	

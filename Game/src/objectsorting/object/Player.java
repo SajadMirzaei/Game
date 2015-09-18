@@ -19,17 +19,18 @@ public class Player implements Serializable{
 	private boolean assigned = false;
 	private boolean recentlyChanged = false;
 	private int dropOffs = 0;
+	private double speedMultiplier = 1;
 	
-	public transient static final String SEPERATOR = "_";
+//	public transient static final String SEPERATOR = "_";
 	
-	public Player(String s) {
-		String[] split = s.split(SEPERATOR);
-		id = split[1];
-		sourceAttender = Boolean.valueOf(split[2]);
-		carrying = Integer.valueOf(split[3]);
-		position = new int[] {Integer.valueOf(split[4]), Integer.valueOf(split[5])};
-		dropOffs = Integer.valueOf(split[6]);
-	}
+//	public Player(String s) {
+//		String[] split = s.split(SEPERATOR);
+//		id = split[1];
+//		sourceAttender = Boolean.valueOf(split[2]);
+//		carrying = Integer.valueOf(split[3]);
+//		position = new int[] {Integer.valueOf(split[4]), Integer.valueOf(split[5])};
+//		dropOffs = Integer.valueOf(split[6]);
+//	}
 	
 	public Player() {
 	}
@@ -89,8 +90,17 @@ public class Player implements Serializable{
 		return dropOffs;
 	}
 	
-	@Override
-	public String toString() {
-		return Util.OBJ_PLAYER + SEPERATOR + id + SEPERATOR + sourceAttender + SEPERATOR + carrying + SEPERATOR + position[0] + SEPERATOR + position[1] + SEPERATOR + dropOffs;
+	
+	public double getSpeedMultiplier() {
+		return speedMultiplier;
 	}
+
+	public void setSpeedMultiplier(double speedMultiplier) {
+		this.speedMultiplier = speedMultiplier;
+	}
+
+//	@Override
+//	public String toString() {
+//		return Util.OBJ_PLAYER + SEPERATOR + id + SEPERATOR + sourceAttender + SEPERATOR + carrying + SEPERATOR + position[0] + SEPERATOR + position[1] + SEPERATOR + dropOffs;
+//	}
 }

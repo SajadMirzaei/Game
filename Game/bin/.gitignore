@@ -1,7 +1,11 @@
-/objectsorting/
-/server/
 /chong/
 /client/
+/icons/
+/jdom-2.0.6.jar
 /objects/
-/shuffling/
+/objectsorting/
+/server/
 /setting.out.xml
+/setting.xml
+/setting_Old.xml
+/shuffling/

@@ -233,7 +233,7 @@ public class GamePanel extends JPanel{
     }
     
     public void sendPosition() {
-		String data = id + "-" + (int) avatarLocation[0] + "," + (int) avatarLocation[1];
+		String data = id + Util.ID_SEPERATOR + (int) avatarLocation[0] + Util.POSITION_SEPERATOR + (int) avatarLocation[1];
 		client.sender.send(data);
 	}
     

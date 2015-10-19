@@ -18,6 +18,7 @@ public class GameStatus implements Serializable{
 	public List<Player> players = new ArrayList<>();
 	public transient Map<String, List<Long>> playerDropOffMap = new HashMap<String, List<Long>>();
 	public double rate;
+	public boolean gameRunning = true;
 	
 	public transient Setting setting;
 
@@ -103,6 +104,9 @@ public class GameStatus implements Serializable{
 			p.setDropOffs(getIndividualRate(p.getId()));
 		}
 		rate = getOverallRate();
+		if (rate >= setting.gameEndCriterion) {
+			gameRunning = false;
+		}
 	}
 	
 	public void setSetting(Setting setting) {

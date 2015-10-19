@@ -146,7 +146,7 @@ public class Client extends JFrame{
 		JFrame frame = new JFrame("Client");
 		try {
 			JPanel infoPanel = new JPanel();
-			infoPanel.setPreferredSize(new Dimension(setting.screenSize[0], 50));
+			infoPanel.setPreferredSize(new Dimension(0, 0));
 			gamePanel = new GamePanel(this, infoPanel);
 			gamePanel.setPreferredSize(new Dimension(setting.screenSize[0], setting.screenSize[1]));
 			frame.getContentPane()

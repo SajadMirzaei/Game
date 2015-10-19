@@ -2,7 +2,7 @@
 <ExperimentDescription Version="1">
 
 	<GeneralSetting>
-		<ScreenSize x="500" y="500"/>
+		<ScreenSize x="1500" y="500"/>
 		<Object type="1" r="255" g="255" b="255"/>
 		<Object type="2" r="0" g="0" b="255"/>
 		<Object type="3" r="255" g="255" b="0"/>
@@ -11,16 +11,16 @@
 			<OtherColor r="0" g="255" b="0"/>
 			<SelfSize>30</SelfSize>
 			<OtherSize>30</OtherSize>
-			<SpeedCarrying>10</SpeedCarrying>
-			<SpeedUnladen>20</SpeedUnladen>
+			<SpeedCarrying>30</SpeedCarrying>
+			<SpeedUnladen>30</SpeedUnladen>
 		</SourceAttender>
 		<SinkAttender>
 			<SelfColor r="255" g="165" b="0"/>
 			<OtherColor r="255" g="0" b="0"/>
 			<SelfSize>30</SelfSize>
 			<OtherSize>30</OtherSize>
-			<SpeedCarrying>10</SpeedCarrying>
-			<SpeedUnladen>20</SpeedUnladen>
+			<SpeedCarrying>30</SpeedCarrying>
+			<SpeedUnladen>30</SpeedUnladen>
 		</SinkAttender>
 	</GeneralSetting>
 	<SourceDescription>
@@ -71,7 +71,7 @@
 			<TargetType>3</TargetType>
 			<Location> 
 				<X>50</X>
-				<Y>450</Y>
+				<Y>350</Y>
 			</Location>
 			<Appearance>
 				<Color r="255" g="255" b="0"/>
@@ -96,7 +96,7 @@
 	<PlayerDescription>
 		<Player Number="1">
 			<Type>1</Type>
-			<SpeedMultiplier>5</SpeedMultiplier>
+			<SpeedMultiplier>1</SpeedMultiplier>
 			<Location>
 				<X>400</X>
 				<Y>50</Y>
@@ -115,39 +115,23 @@
 			<SpeedMultiplier>1</SpeedMultiplier>
 			<Location>
 				<X>400</X>
-				<Y>200</Y>
+				<Y>50</Y>
 			</Location>
 		</Player>
 		<Player Number="4">
 			<Type>2</Type>
 			<SpeedMultiplier>1</SpeedMultiplier>
 			<Location>
-				<X>30</X>
-				<Y>30</Y>
-			</Location>
-		</Player>
-		<Player Number="5">
-			<Type>1</Type>
-			<SpeedMultiplier>1</SpeedMultiplier>
-			<Location>
-				<X>450</X>
-				<Y>375</Y>
-			</Location>
-		</Player>
-		<Player Number="6">
-			<Type>2</Type>
-			<SpeedMultiplier>1</SpeedMultiplier>
-			<Location>
-				<X>35</X>
-				<Y>475</Y>
+				<X>100</X>
+				<Y>50</Y>
 			</Location>
 		</Player>
 	</PlayerDescription>
 	
 	<FeedbackDisplay>
 	   <TimeWindow>60</TimeWindow>
-	   <MaxDropOffRate>20</MaxDropOffRate>
-	   <GameEndCriterion>15</GameEndCriterion>
+	   <MaxDropOffRate>10</MaxDropOffRate>
+	   <GameEndCriterion>5</GameEndCriterion>
 	</FeedbackDisplay>
 
 	<WaveDescription Number="1">

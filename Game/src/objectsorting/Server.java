@@ -392,6 +392,8 @@ public class Server extends JFrame {
 						// System.out.println("started = true");
 						status.startTimeMillis = System.currentTimeMillis();
 						started = true;
+						status.gameRunning = true;
+						
 					}
 				}
 			}
@@ -515,6 +517,16 @@ public class Server extends JFrame {
 			e.printStackTrace();
 		}
 	}
+
+	public void restartGame() {
+		status.gameRunning = true;
+		status.rate = 0;
+		for (Player player : status.players) {
+			status.playerDropOffMap.get(player.getId()).clear();
+			player.setCarrying(0);
+			player.setDropOffs(0);
+		}
+	}
 }
 
 class Receiver implements Runnable {
@@ -603,6 +615,10 @@ class Sender implements Runnable {
 					send(baos.toByteArray());
 					// send(positionData);
 					Thread.sleep(10);
+					if (!server.status.gameRunning) {
+						Thread.sleep(5000);
+						server.restartGame();
+					}
 				} else if (server.startButtonPushed) {
 					oos.writeObject(server.setting);
 					send(baos.toByteArray());

@@ -45,6 +45,8 @@ public class Client extends JFrame{
 	public boolean started = false;
 	public boolean connected = false;
 	
+	
+	
 	public Setting setting;
 	
 	static{

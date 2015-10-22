@@ -13,6 +13,8 @@ import java.util.ArrayList;
  */
 public class GameWave {
     private String waveDscrpAttr;
+    
+    
     private ArrayList<ObjectSortingGame> objectSortingGameList;
     
     public GameWave(){

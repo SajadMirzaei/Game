@@ -8,6 +8,7 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -24,6 +25,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
@@ -42,13 +44,15 @@ public class Client extends JFrame{
 	public String clientID;
 	
 	public ClientUDPSender sender;
-	public boolean started = false;
-	public boolean connected = false;
+	public static boolean started = false;
+	public static boolean connected = false;
 	
+	public static Setting setting;
 	
-	
-	public Setting setting;
-	
+	private boolean bPasued=false;
+        private JFrame frame;
+        private boolean bsameClientId=false;
+        
 	static{
 		for (int i = 0; i < avatarNames.length; i++) {
 			avatarNames[i] = String.valueOf(i+1);
@@ -57,6 +61,8 @@ public class Client extends JFrame{
 
 	public Client() throws Exception {
 		super("Client");
+		
+                frame = new JFrame("Client");
 		Point p = new Point(400, 400);
 		setLocation(p.x, p.y);
 		//Server Pane
@@ -109,26 +115,54 @@ public class Client extends JFrame{
 //		}
 //	}
 	
+        private void delayAWhile(int msec)
+        {
+            try {
+                        Thread.sleep(msec);
+                } catch (InterruptedException e) {
+                        e.printStackTrace();
+                }
+        }
+        
 	public void updateClient(byte[] b){
 	    try {
 	    	ByteArrayInputStream bis = new ByteArrayInputStream(b);
 	    	ObjectInputStream ois = new ObjectInputStream(bis);
-			Object object = ois.readObject();
-			if (object instanceof Setting) {
-				setting = (Setting) object;
-				connected = true;
-			}else if (object instanceof GameStatus){
-				if (!started) {
-					started = true;
-					initiateGamePanel();
-				}
-				gamePanel.updatePositions((GameStatus) object);
-			}
-			bis.close();
-			ois.close();
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-		}
+                Object object = ois.readObject();
+                //String test=object.toString();
+                
+                
+                
+                
+                
+                //System.out.println(test);
+                if (object instanceof Setting) {
+                        setting = (Setting) object;
+                        connected = true;
+                        bsameClientId=false;
+                }else if (object instanceof GameStatus){
+                        if (!started) {
+                            started = true;
+                            frame.getContentPane().removeAll();
+                            initiateGamePanel();
+                            frame.repaint();                                       
+                        }
+                        gamePanel.updatePositions((GameStatus) object);
+                }else if(((String)object).contains("PAUSE")){
+                        connected=false;
+                        started=false;
+                        if(bsameClientId==false)
+                        {
+                            clientID = nameField.getText() + System.currentTimeMillis();
+                            bsameClientId=true;
+                        }
+                        delayAWhile(1000);
+                }
+                bis.close();
+                ois.close();
+            } catch (ClassNotFoundException | IOException e) {
+                    e.printStackTrace();
+            }
 	}
 	
 	public void initiateWaitingDialog(){
@@ -145,10 +179,10 @@ public class Client extends JFrame{
 	
 	public void initiateGamePanel(){
 		setVisible(false);
-		JFrame frame = new JFrame("Client");
+		
 		try {
 			JPanel infoPanel = new JPanel();
-			infoPanel.setPreferredSize(new Dimension(0, 0));
+			infoPanel.setPreferredSize(new Dimension(setting.screenSize[0], 50));
 			gamePanel = new GamePanel(this, infoPanel);
 			gamePanel.setPreferredSize(new Dimension(setting.screenSize[0], setting.screenSize[1]));
 			frame.getContentPane()
@@ -161,14 +195,15 @@ public class Client extends JFrame{
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// frame.setLocation(new Point(100, 100));
 		frame.setSize(setting.screenSize[0], setting.screenSize[1]+50);
+                              
 		frame.setVisible(true);
 		frame.setResizable(false);
 	}
 
+        
 	public static void main(String[] a) {
 		try {
 			Client client = new Client();
-//			client.startThreads();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -216,6 +251,7 @@ class ClientUDPReceiver implements Runnable{
 	}
 }
 
+
 class ClientUDPSender implements Runnable{
 	
 	Client client;
@@ -232,6 +268,22 @@ class ClientUDPSender implements Runnable{
 	
 	public void send(String s){
 //		System.out.println("Sending: " + s);
+		if(client.started==true && client.connected==true)
+		{
+			byte[] sendData = s.getBytes();
+			try {
+				DatagramPacket sendPacket = new DatagramPacket(sendData,
+						sendData.length, InetAddress.getByName(client.serverField.getText()), Util.UNI_PORT);
+				sendSocket.send(sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void connect(String s){
+//		System.out.println("Sending: " + s);
+		
 		byte[] sendData = s.getBytes();
 		try {
 			DatagramPacket sendPacket = new DatagramPacket(sendData,
@@ -240,21 +292,26 @@ class ClientUDPSender implements Runnable{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
 	
 	@Override
 	public void run() {
-		while (!client.started) {
-			if (!client.connected) {
-				send(client.clientID);
-			}else{
-				send(new String(client.clientID + "-RECEIVED"));
-			}
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+            while (true) {
+                //JOptionPane.showMessageDialog(null, "test");
+                if(!client.started){
+                    if (!client.connected) {
+                            connect(client.clientID);
+
+                    }else{
+                            connect(new String(client.clientID + "-RECEIVED"));
+                    }                   
+                }
+                try {
+                        Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                        e.printStackTrace();
+                }
+            }
 	}
 }

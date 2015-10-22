@@ -26,6 +26,7 @@ public class Setting implements Serializable{
 	public transient int timeWindow;
 	public int maxDropOffRate;
 	public int gameEndCriterion;
+	public int maxRunningTime;
 	
 	public int[] screenSize = new int[]{1500,750};
 	

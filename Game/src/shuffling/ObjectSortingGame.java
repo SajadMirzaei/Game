@@ -6,6 +6,8 @@
 package shuffling;
 
 import java.util.ArrayList;
+import objectsorting.object.Setting;
+import objectsorting.object.GameStatus;
 
 /**
  *
@@ -13,18 +15,29 @@ import java.util.ArrayList;
  */
 public class ObjectSortingGame {
     private String description;
-    private ArrayList<Integer> playerList; 
     private GameParameter gamepar;
+    private Setting setting;
+    private GameStatus status;
     
     public ObjectSortingGame(){
         this.description="";
-        playerList=new ArrayList<Integer>();
-        playerList.clear();
         gamepar=new GameParameter();
     }
     
-    public void addPlayerToGame(int playerNum){
-        this.playerList.add(playerNum);
+    public void setSettings(Setting setting){
+    	this.setting=setting;
+    }
+    
+    public Setting getSettings(){
+    	return this.setting;
+    }
+    
+    public void setStatus(GameStatus status){
+    	this.status=status;
+    }
+    
+    public GameStatus getStatus(){
+    	return this.status;
     }
     
     public void setGameParameters(String sGoalNums, String timeout, String allowMatches, String diffGroup){
@@ -35,15 +48,7 @@ public class ObjectSortingGame {
     public long getGameTime(){
         return gamepar.getTimeOut();
     }
-    
-    public int getNumOfPlayers(){
-        return playerList.size();
-    }
-    
-    public int getPlayerId(int pos){
-        return playerList.get(pos);
-    }
-    
+
     
     public void setDescription(String description){
         this.description=description;

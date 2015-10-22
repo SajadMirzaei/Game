@@ -22,6 +22,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
@@ -49,264 +50,32 @@ public class Server extends JFrame {
 	Thread senderThread;
 
 	Sender sender;
-	public boolean started;
-	public boolean startButtonPushed;
+	public static boolean started;
+	public static boolean startButtonPushed;
 	private Set<String> readyClients = new HashSet<String>();
 	private Set<String> clients = new HashSet<String>();
 
-	public Setting setting;
-	public GameStatus status;
-	public WaveManager wavemngr;
+	public static Setting setting;
+	public static GameStatus status;
+	
 
 	private String sconfig;
 	private int playInitialPos[][];
 	
 	private static Server server;
-
+	public static WaveManager wavemngr;
+	public static boolean bGamePaused;
+        public boolean bfirstGame;
+        
 	public Server() throws Exception {
 		super("Server");
-		status = new GameStatus();
-		sconfig = "../setting.xml";
-		readConfigs(sconfig);
-
-		// save initial player positions
-		int numOfPlayers = status.players.size();
-		playInitialPos = new int[numOfPlayers][2];
-		for (int i = 0; i < numOfPlayers; i++) {
-			playInitialPos[i] = status.players.get(i).getPosition();
-		}
-
-		status.setSetting(setting);
+		
 		initializeFrame();
 		started = false;
-
-		wavemngr = new WaveManager(this);
-		wavemngr.loadConfiguration(sconfig);
-	}
-
-	public void stopCurrentGame() {
-		synchronized (this) {
-			started = false;
-			startButtonPushed = false;
-		}
-		clientTextArea.append("Current game is finished or time out! \n");
-
-		// try {
-		// Thread.sleep(15000);
-		// } catch (InterruptedException e) {
-		// e.printStackTrace();
-		// }
-	}
-
-	public void broadCastAllFinished() {
-		synchronized (this) {
-			started = false;
-			startButtonPushed = false;
-		}
-		clientTextArea.append("All the waves has been finished! \n");
-	}
-
-	private void initialGameInfo() {
-		// reset to the initial positions
-		int numOfPlayers = status.players.size();
-		for (int i = 0; i < numOfPlayers; i++) {
-			updateStatus(status.players.get(i), playInitialPos[i]);
-		}
-	}
-
-	public void startNewGame(ObjectSortingGame curGame) {
-		try {
-			Thread.sleep(15000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		clientTextArea.append("New game started! \n");
-		initialGameInfo();
-
-		synchronized (this) {
-			started = true;
-			startButtonPushed = true;
-		}
-
-	}
-
-	private void readConfigs(String url) {
-		setting = new Setting();
-		SAXBuilder sxb = new SAXBuilder();
-		try {
-			Document configDoc = sxb.build(Util.load(url));
-			Element rootElmt = configDoc.getRootElement();
-			Iterator<Element> iterator = rootElmt.getChildren().iterator();
-			while (iterator.hasNext()) {
-				Element element = iterator.next();
-				if (element.getName().equals("GeneralSetting")) {
-					Element screenSizeChild = element.getChild("ScreenSize");
-					setting.screenSize[0] = Integer.valueOf(screenSizeChild
-							.getAttributeValue("x"));
-					setting.screenSize[1] = Integer.valueOf(screenSizeChild
-							.getAttributeValue("y"));
-					List<Element> settingElements = element.getChildren("Object");
-					for (Element element2 : settingElements) {
-						Color color = new Color(Integer.valueOf(element2.getAttributeValue("r")),Integer.valueOf(element2.getAttributeValue("g")),Integer.valueOf(element2.getAttributeValue("b")));
-						setting.objectColors.put(Integer.valueOf(element2.getAttributeValue("type")), color);
-					}
-					Element settingElement = element.getChild("SourceAttender");
-					Element colorElement = settingElement.getChild("SelfColor");
-					Color color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
-					setting.soSelfColor = color;
-					colorElement = settingElement.getChild("OtherColor");
-					color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
-					setting.soOtherColor = color;
-					setting.soSelfSize = Integer.valueOf(settingElement.getChild("SelfSize").getValue());
-					setting.soOtherSize = Integer.valueOf(settingElement.getChild("OtherSize").getValue());
-					setting.soSpeedCarrying = Integer.valueOf(settingElement.getChild("SpeedCarrying").getValue());
-					setting.soSpeedUnladen = Integer.valueOf(settingElement.getChild("SpeedUnladen").getValue());
-					settingElement = element.getChild("SinkAttender");
-					colorElement = settingElement.getChild("SelfColor");
-					color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
-					setting.siSelfColor = color;
-					colorElement = settingElement.getChild("OtherColor");
-					color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
-					setting.siOtherColor = color;
-					setting.siSelfSize = Integer.valueOf(settingElement.getChild("SelfSize").getValue());
-					setting.siOtherSize = Integer.valueOf(settingElement.getChild("OtherSize").getValue());
-					setting.siSpeedCarrying = Integer.valueOf(settingElement.getChild("SpeedCarrying").getValue());
-					setting.siSpeedUnladen = Integer.valueOf(settingElement.getChild("SpeedUnladen").getValue());
-					// SOURCE READ
-				} else if (element.getName().equals("SourceDescription")) {
-					setting.line1Position = Integer.valueOf(element.getChild(
-							"LeftBoundary").getValue());
-					List<Element> sourceList = element.getChildren("Source");
-					for (Element sourceElement : sourceList) {
-						Source source = new Source();
-						source.setId(sourceElement.getAttributeValue("Number"));
-						List<Element> objects = sourceElement.getChild("Proportions").getChildren();
-						double sum = 0;
-						for (Element element2 : objects) {
-							source.getProportionMap().put(Integer.valueOf(element2.getAttributeValue("type")), Double.valueOf(element2.getAttributeValue("proportion")));
-							sum += Double.valueOf(element2.getAttributeValue("proportion"));
-						}
-						if (sum != 1) {
-							throw new Exception("Proportion values should add up to 1");
-						}
-						source.setPosition(new int[] {
-								Integer.valueOf(sourceElement
-										.getChild("Location").getChild("X")
-										.getValue()),
-								Integer.valueOf(sourceElement
-										.getChild("Location").getChild("Y")
-										.getValue()) });
-						source.setSize(Integer.valueOf(sourceElement
-								.getChild("Appearance").getChild("Size")
-								.getValue()));
-						Element colorElement = sourceElement.getChild("Appearance").getChild("Color");
-						source.setColor(new Color(Integer.valueOf(colorElement
-								.getAttributeValue("r")), Integer
-								.valueOf(colorElement.getAttributeValue("g")),
-								Integer.valueOf(colorElement
-										.getAttributeValue("b"))));
-						setting.sourceList.add(source);
-					}
-					// SINK READ
-				} else if (element.getName().equals("SinkDescription")) {
-					setting.line2Position = Integer.valueOf(element.getChild(
-							"RightBoundary").getValue());
-					List<Element> sinkList = element.getChildren("Sink");
-					for (Element sinkElement : sinkList) {
-						Sink sink = new Sink();
-						sink.setId(sinkElement.getAttributeValue("Number"));
-						sink.setPosition(new int[] {
-								Integer.valueOf(sinkElement
-										.getChild("Location").getChild("X")
-										.getValue()),
-								Integer.valueOf(sinkElement
-										.getChild("Location").getChild("Y")
-										.getValue()) });
-						sink.setAcceptingObject(Integer.valueOf(sinkElement.getChild("TargetType").getValue()));
-						sink.setSize(Integer.valueOf(sinkElement
-								.getChild("Appearance").getChild("Size")
-								.getValue()));
-						Element colorElement = sinkElement.getChild("Appearance").getChild("Color");
-						sink.setColor(new Color(Integer.valueOf(colorElement
-								.getAttributeValue("r")), Integer
-								.valueOf(colorElement.getAttributeValue("g")),
-								Integer.valueOf(colorElement
-										.getAttributeValue("b"))));
-						setting.sinkList.add(sink);
-					}
-					// BASE READ
-				} else if (element.getName().equals("BaseDescription")) {
-					List<Element> baseList = element.getChildren();
-					for (Element baseElement : baseList) {
-						Base base = new Base();
-						base.setId(baseElement.getAttributeValue("Number"));
-						base.setPosition(new int[] {
-								Integer.valueOf(baseElement
-										.getChild("Location").getChild("X")
-										.getValue()),
-								Integer.valueOf(baseElement
-										.getChild("Location").getChild("Y")
-										.getValue()) });
-						base.setSize(Integer.valueOf(baseElement
-								.getChild("Appearance").getChild("Size")
-								.getValue()));
-						Element colorElement = baseElement.getChild("Appearance").getChild("Color");
-						base.setColor(new Color(Integer.valueOf(colorElement
-								.getAttributeValue("r")), Integer
-								.valueOf(colorElement.getAttributeValue("g")),
-								Integer.valueOf(colorElement
-										.getAttributeValue("b"))));
-						if (baseElement.getAttribute("enabled")
-								.getBooleanValue()) {
-							setting.baseList.add(base);
-						}
-					}
-				} else if (element.getName().equals("PlayerDescription")) {
-					List<Element> playerList = element.getChildren();
-					for (Element playerElement : playerList) {
-						Player player = new Player();
-						player.setId(playerElement.getAttributeValue("Number"));
-						player.setSpeedMultiplier(Double.valueOf(playerElement.getChild("SpeedMultiplier").getValue()));
-						player.setPosition(new int[] {
-								Integer.valueOf(playerElement
-										.getChild("Location").getChild("X")
-										.getValue()),
-								Integer.valueOf(playerElement
-										.getChild("Location").getChild("Y")
-										.getValue()) });
-						player.setSourceAttender((playerElement
-								.getChild("Type").getValue().equals("1")));
-						setting.playerList.add(player);
-						status.players.add(player);
-						status.playerDropOffMap.put(player.getId(),
-								new ArrayList<Long>());
-					}
-				} else if (element.getName().equals("FeedbackDisplay")) {
-					setting.gameEndCriterion = Integer.valueOf(element
-							.getChild("GameEndCriterion").getValue());
-					setting.maxDropOffRate = Integer.valueOf(element.getChild(
-							"MaxDropOffRate").getValue());
-					setting.timeWindow = Integer.valueOf(element.getChild(
-							"TimeWindow").getValue());
-				}
-			}
-		} catch (Exception e) {
-			JDialog d = new JDialog(this);
-			d.getContentPane()
-					.add(new JTextArea("Error Reading Setting File: \n" + e.getMessage()));
-			d.setSize(300, 300);
-			d.setVisible(true);
-			e.printStackTrace();
-		}
-	}
-
-	public void startThreads() {
-		sender = new Sender(this);
-		Thread receiver = new Thread(new Receiver(this), "Sender");
-		receiver.start();
-		senderThread = new Thread(sender, "Receiver");
-		senderThread.start();
+		startButtonPushed=false;
+                bGamePaused=false;
+                bfirstGame=true;
+                
 	}
 
 	private void initializeFrame() {
@@ -326,6 +95,7 @@ public class Server extends JFrame {
 				synchronized (this) {
 					// System.out.println("startButtonPushed = true");
 					startButtonPushed = true;
+                                        bfirstGame=false;
 				}
 				wavemngr.start(); // start the thread
 			}
@@ -340,7 +110,7 @@ public class Server extends JFrame {
 			}
 		});
 
-		// Set up
+		// Set up 
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		pack();
 		setSize(new Dimension(300, 300));
@@ -373,19 +143,152 @@ public class Server extends JFrame {
 	// return result;
 	// }
 
-	public void updateServer(String sentence, InetAddress inetAddress) {
-		if (!sentence.contains(",")) {
+
+	public static void main(String args[]) {
+		try {
+			server = new Server();			
+			wavemngr = new WaveManager(server);
+			String sconfig = "../setting.xml";
+                        //String sconfig = "G:\\Others\\DepOfPhy\\Game-master\\Game\\bin\\test_wave1.xml";
+			wavemngr.loadConfiguration(sconfig);
+			wavemngr.setFirstGame();
+			
+			server.startThreads();
+			
+			
+		} catch (Exception e) {
+			JDialog d = new JDialog(server);
+			d.getContentPane()
+					.add(new JTextArea("Error: \n" + e.getMessage() + "\n" + e.toString()));
+			d.setSize(300, 300);
+			d.setVisible(true);
+			e.printStackTrace();
+		}
+	}
+        
+    public void setSettingStatus(Setting setting, GameStatus status){
+		this.setting=setting;
+		this.status=status;
+		this.status.setSetting(setting);
+                
+        int m=status.players.size();
+        int n1=setting.screenSize[0];
+        int n2=setting.screenSize[1];
+                
+	}
+	
+    public void sendPauseCmd()
+    {
+        try{
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            String content="PAUSE";
+            oos.writeObject(content);
+            sender.send(baos.toByteArray());
+        } catch (IOException e) {
+                e.printStackTrace();
+        }
+    }
+        
+	public void stopCurrentGame() {
+		//send out "PAUSE" command to all players
+                
+		synchronized (this) {
+                        bGamePaused=true;
+			started = false;
+			startButtonPushed = false;
+			clients.clear();
+			this.readyClients.clear();
+		}
+		clientTextArea.append("Current game is finished or time out! \n");
+		                
+
+		//this.button.setEnabled(true);
+		// try {
+		// Thread.sleep(15000);
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// }
+	}
+
+	public void broadCastAllFinished() {
+		synchronized (this) {
+			started = false;
+			startButtonPushed = false;
+		}
+		clientTextArea.append("All the waves has been finished! \n");
+	}
+	
+
+	public void startNewGame(ObjectSortingGame curGame) {
+		try {
+			Thread.sleep(15000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		setSettingStatus(curGame.getSettings(),curGame.getStatus());
+		restartGame();
+		
+		clientTextArea.append("New game started! \n");
+		
+		synchronized (this) {
+                        bGamePaused=false;
+		}
+	}
+	
+	
+	public void startThreads() {
+		sender = new Sender(this);
+		Thread receiver = new Thread(new Receiver(this), "Sender");
+		receiver.start();
+		senderThread = new Thread(sender, "Receiver");
+		senderThread.start();
+	}
+        
+	public void restartGame() {
+		status.gameRunning = true;
+		status.rate = 0;
+		for (Player player : status.players) {
+			status.playerDropOffMap.get(player.getId()).clear();
+			player.setCarrying(0);
+			player.setDropOffs(0);
+		}
+	}
+	
+	public void setGameFinished(){
+		wavemngr.setGameFinished(true);
+	}
+        
+    private void delayAWhile(int msec)
+    {
+        try {
+                    Thread.sleep(msec);
+            } catch (InterruptedException e) {
+                    e.printStackTrace();
+            }
+    }
+        
+    public void updateServer(String sentence, InetAddress inetAddress) {
+       if (!sentence.contains(",")) {
 			if (!sentence.contains("RECEIVED")) {
 				if (!clients.contains(sentence)) {
 					status.assignPlayer(sentence);
 					clients.add(sentence);
 					clientTextArea.append("Player connected from IP Address"
 							+ inetAddress + "\n");
-				}
-			} else {
+                                                                               
+                                        if(clients.size()== setting.playerList.size() && bfirstGame==false)
+                                        {                                            
+                                            startButtonPushed = true;
+                                        }
+			}
+                                
+            } else {
 				// ACKNOWLEDGMENT by client in sent
-				String[] splited = sentence.split(Util.ID_SEPERATOR);
-				readyClients.add(splited[0]);
+				String[] splited = sentence.split(Util.ID_SEPERATOR);                               
+                                readyClients.add(splited[0]);
+
 				if (readyClients.size() == status.getNumberOfAssignedPlayers()) {
 					// System.out.println("All acks received");
 					synchronized (this) {
@@ -393,11 +296,16 @@ public class Server extends JFrame {
 						status.startTimeMillis = System.currentTimeMillis();
 						started = true;
 						status.gameRunning = true;
-						
+
 					}
 				}
-			}
+            }
 		} else {
+            if(startButtonPushed==false)
+            {
+                this.sendPauseCmd();
+            }
+                        
 			// Update positions
 			String[] data = sentence.split(Util.ID_SEPERATOR);
 			int[] position = new int[] {
@@ -503,30 +411,6 @@ public class Server extends JFrame {
 			}
 		}
 	}
-
-	public static void main(String args[]) {
-		try {
-			server = new Server();
-			server.startThreads();
-		} catch (Exception e) {
-			JDialog d = new JDialog(server);
-			d.getContentPane()
-					.add(new JTextArea("Error: \n" + e.getMessage() + "\n" + e.toString()));
-			d.setSize(300, 300);
-			d.setVisible(true);
-			e.printStackTrace();
-		}
-	}
-
-	public void restartGame() {
-		status.gameRunning = true;
-		status.rate = 0;
-		for (Player player : status.players) {
-			status.playerDropOffMap.get(player.getId()).clear();
-			player.setCarrying(0);
-			player.setDropOffs(0);
-		}
-	}
 }
 
 class Receiver implements Runnable {
@@ -547,20 +431,30 @@ class Receiver implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
-			try {
-				byte[] receiveData = new byte[1024];
-				DatagramPacket receivePacket = new DatagramPacket(receiveData,
-						receiveData.length);
-				receiverSocket.receive(receivePacket);
-				String sentence = new String(receivePacket.getData(), 0,
-						receivePacket.getLength());
-				// System.out.println("Received: " + sentence);
-				server.updateServer(sentence, receivePacket.getAddress());
-			} catch (SocketException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			if(server.bGamePaused==false)
+            {
+				try {
+					byte[] receiveData = new byte[1024];
+					DatagramPacket receivePacket = new DatagramPacket(receiveData,
+							receiveData.length);
+					receiverSocket.receive(receivePacket);
+					String sentence = new String(receivePacket.getData(), 0,
+							receivePacket.getLength());
+					// System.out.println("Received: " + sentence);
+					server.updateServer(sentence, receivePacket.getAddress());
+				} catch (SocketException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+            }
+            else{
+                try{
+                    Thread.sleep(1000);
+                }catch (InterruptedException e) {				
+                	e.printStackTrace();
+                }
+            }
 		}
 	}
 }
@@ -591,7 +485,7 @@ class Sender implements Runnable {
 		}
 	}
 
-	public void send(byte[] b) {
+	public void send(byte[] b) {//
 		// System.out.println("Sending: " + s);
 		DatagramPacket sendPacket = new DatagramPacket(b, b.length,
 				server.group, Util.MULTI_PORT);
@@ -614,12 +508,14 @@ class Sender implements Runnable {
 					oos.writeObject(server.status);
 					send(baos.toByteArray());
 					// send(positionData);
-					Thread.sleep(10);
+//					Thread.sleep(10);
 					if (!server.status.gameRunning) {
-						Thread.sleep(5000);
-						server.restartGame();
+						//Thread.sleep(5000);
+						//server.restartGame();//
+						server.setGameFinished();
 					}
 				} else if (server.startButtonPushed) {
+					Setting asetting=server.setting;
 					oos.writeObject(server.setting);
 					send(baos.toByteArray());
 					// send(server.setting.toString());

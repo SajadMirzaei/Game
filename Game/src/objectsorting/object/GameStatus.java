@@ -11,7 +11,7 @@ import objects.Util;
 public class GameStatus implements Serializable{
 	
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	public transient long startTimeMillis; 
@@ -37,6 +37,7 @@ public class GameStatus implements Serializable{
 //	}
 
 	public GameStatus() {
+            players.clear();
 	}
 	
 	public int getNumberOfAssignedPlayers(){

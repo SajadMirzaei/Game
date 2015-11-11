@@ -84,7 +84,7 @@
 		</FeedbackDisplay>
 		
 		<GameParameters>
-        <TimeOut>30000</TimeOut>
+        <TimeOut>300000</TimeOut>
         <DifferentGroup>0</DifferentGroup>
     </GameParameters>
     
@@ -97,11 +97,19 @@
 						<X>750</X>
 						<Y>250</Y>
 					</Location>
+				</Player>
+				<Player Number="2">
+					<Type>2</Type>
+					<SpeedMultiplier>1</SpeedMultiplier>
+					<Location>
+						<X>750</X>
+						<Y>250</Y>
+					</Location>
 				</Player>			
 			</Group>
 			
 			<Group Number="2">
-				<Player Number="2">
+				<Player Number="3">
 					<Type>2</Type>
 					<SpeedMultiplier>1</SpeedMultiplier>
 					<Location>

@@ -231,6 +231,8 @@ public class Server extends JFrame {
     			this.groupIndex.add(-1);
     		}	
     	}
+
+System.out.println("Total number of players is "+String.valueOf(totalPlayerNum));    	
     	
     	for(int i=0;i<nGroups;i++){
     		Setting curSetting=curGame.groupSettingList.get(i);
@@ -723,7 +725,7 @@ class ManageSender implements Runnable {
 					for(int i=0;i<nplayers;i++){//for each player, we broadcast its ip
 						int groupid=server.groupIndex.get(i);
 						String newgip=server.newGroupIp.get(groupid);
-						String content="GROUP_IP:"+server.clients_ip.get(i)+"_"+newgip;		
+						String content="GROUP_IP:"+server.clients_ip.get(i)+"_"+newgip;
 System.out.println(content);
 						ByteArrayOutputStream baos = new ByteArrayOutputStream();
 						ObjectOutputStream oos = new ObjectOutputStream(baos);

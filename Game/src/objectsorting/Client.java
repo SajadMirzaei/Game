@@ -354,7 +354,7 @@ class ClientUDPReceiver implements Runnable{
 		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		while (true) {
 			try{
-System.out.println("Client UDP receiver of group " + group.getHostAddress() + " working now....");
+//System.out.println("Client UDP receiver of group " + group.getHostAddress() + " working now....");
 				receiverSocket.setSoTimeout(2000);
 				receiverSocket.receive(receivePacket);
 //				String received = new String(receivePacket.getData(),0,receivePacket.getLength());

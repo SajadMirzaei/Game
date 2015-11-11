@@ -16,8 +16,11 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Enumeration;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -50,19 +53,23 @@ public class Client extends JFrame{
 	public static Setting setting;
 	
 	private boolean bPasued=false;
-        private JFrame frame;
-        private boolean bsameClientId=false;
-        
+    private JFrame frame;
+    private boolean bsameClientId=false;
+    
+    public static boolean bGroupIpReceived=false;
+    public static ArrayList<String> ipAddresses=new ArrayList<String>();
+    
 	static{
 		for (int i = 0; i < avatarNames.length; i++) {
 			avatarNames[i] = String.valueOf(i+1);
 		}
 	}
-
+	
 	public Client() throws Exception {
 		super("Client");
 		
-                frame = new JFrame("Client");
+		getMachineIP();
+        frame = new JFrame("Client");
 		Point p = new Point(400, 400);
 		setLocation(p.x, p.y);
 		//Server Pane
@@ -78,7 +85,7 @@ public class Client extends JFrame{
 		serverPane.add(nameField);
 		getContentPane().add(serverPane, BorderLayout.NORTH);
 		
-		//Button Pane
+		//Button Pane 
 		JPanel buttonPane = new JPanel();
 		JButton button = new JButton("OK");
 		button.addActionListener(new ActionListener() {
@@ -92,12 +99,15 @@ public class Client extends JFrame{
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		pack();
 		setVisible(true);
+		
+		
 	}
 	
 	public void startThreads(){
-		sender = new ClientUDPSender(this);
-		Thread receiver = new Thread(new ClientUDPReceiver(this));
+		Thread receiver = new Thread(new ClientGroupIPReceiver(this));
 		receiver.start();
+		
+		sender = new ClientUDPSender(this);
 		Thread senderThread = new Thread(sender);
 		senderThread.start();
 	}
@@ -115,54 +125,68 @@ public class Client extends JFrame{
 //		}
 //	}
 	
-        private void delayAWhile(int msec)
-        {
-            try {
-                        Thread.sleep(msec);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
-        }
+    private void delayAWhile(int msec)
+    {
+        try {
+                    Thread.sleep(msec);
+            } catch (InterruptedException e) {
+                    e.printStackTrace();
+            }
+    }
         
-	public void updateClient(byte[] b){
+	public boolean updateClient(byte[] b){
+		boolean bfinish=false;
 	    try {
 	    	ByteArrayInputStream bis = new ByteArrayInputStream(b);
 	    	ObjectInputStream ois = new ObjectInputStream(bis);
-                Object object = ois.readObject();
-                //String test=object.toString();
-                
-                
-                
-                
-                
-                //System.out.println(test);
-                if (object instanceof Setting) {
-                        setting = (Setting) object;
-                        connected = true;
-                        bsameClientId=false;
-                }else if (object instanceof GameStatus){
-                        if (!started) {
-                            started = true;
-                            frame.getContentPane().removeAll();
-                            initiateGamePanel();
-                            frame.repaint();                                       
-                        }
-                        gamePanel.updatePositions((GameStatus) object);
-                }else if(((String)object).contains("PAUSE")){
-                        connected=false;
-                        started=false;
-                        if(bsameClientId==false)
-                        {
-                            clientID = nameField.getText() + System.currentTimeMillis();
-                            bsameClientId=true;
-                        }
-                        delayAWhile(1000);
+            Object object = ois.readObject();
+                          
+            if (object instanceof Setting) {
+            	bGroupIpReceived=false;
+                setting = (Setting) object;
+                connected = true;
+                bsameClientId=false;
+            }else if (object instanceof GameStatus){
+                if (!started) {
+                    started = true;
+                    frame.getContentPane().removeAll();
+                    initiateGamePanel();
+                    frame.repaint();
                 }
-                bis.close();
-                ois.close();
-            } catch (ClassNotFoundException | IOException e) {
-                    e.printStackTrace();
+                gamePanel.updatePositions((GameStatus) object);
             }
+//            else if(((String)object).contains("SendSettingNow")){
+//System.out.println("Received sendsetting now");
+//            	bGroupIpReceived=false;
+//            }
+            else if(((String)object).contains("PAUSE")){
+                connected=false;
+                started=false;
+                if(bsameClientId==false)
+                {
+                    clientID = nameField.getText() + System.currentTimeMillis();
+                    bsameClientId=true;
+                }
+                
+                bfinish=true;
+                delayAWhile(1000);
+            }
+            bis.close();
+            ois.close();
+        } catch (ClassNotFoundException | IOException e) {
+                e.printStackTrace();
+        }
+	    return bfinish;
+	}
+	
+	public void startReceiver(String sgroupIp){
+		Thread receiver = new Thread(new ClientUDPReceiver(this, sgroupIp));
+		receiver.start();
+	}
+	
+	public void startGroupIpReceiver(){
+		Thread receiver = new Thread(new ClientGroupIPReceiver(this));
+		receiver.start();
 	}
 	
 	public void initiateWaitingDialog(){
@@ -199,8 +223,25 @@ public class Client extends JFrame{
 		frame.setVisible(true);
 		frame.setResizable(false);
 	}
-
-        
+	
+    public void getMachineIP(){
+    	ipAddresses.clear();
+    	try{
+	    	Enumeration en = NetworkInterface.getNetworkInterfaces();
+	    	while(en.hasMoreElements()){
+	    	    NetworkInterface ni=(NetworkInterface) en.nextElement();
+	    	    Enumeration ee = ni.getInetAddresses();
+	    	    while(ee.hasMoreElements()) {
+	    	        InetAddress ia= (InetAddress) ee.nextElement();
+	    	        ipAddresses.add(ia.getHostAddress());
+System.out.println(ia.getHostAddress());
+	    	    }
+	    	 }
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
+    }
+	
 	public static void main(String[] a) {
 		try {
 			Client client = new Client();
@@ -210,16 +251,95 @@ public class Client extends JFrame{
 	}
 }
 
+
+//will change the group address
+class ClientGroupIPReceiver implements Runnable{
+	
+	Client client;
+	MulticastSocket receiverSocket;
+	InetAddress group;
+	
+	public ClientGroupIPReceiver(Client client) {
+		this.client = client;
+		try {
+			receiverSocket = new MulticastSocket(Util.MULTI_PORT);
+			group = InetAddress.getByName(Util.GROUP_ADDRESS);
+			receiverSocket.joinGroup(group);
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void run() {
+		byte[] receiveData = new byte[4096];
+		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		while (true) {
+			try{
+				receiverSocket.setSoTimeout(2000);
+				receiverSocket.receive(receivePacket);
+
+				//client.updateClient(receivePacket.getData());
+				ByteArrayInputStream bis = new ByteArrayInputStream(receivePacket.getData());
+		    	ObjectInputStream ois = new ObjectInputStream(bis);
+	            Object object = ois.readObject();
+	            String content=(String)object;
+	            if(content.contains("GROUP_IP:")){	            	
+	            	String scontent=content.substring(9);
+	            	String[] parts = scontent.split("_");
+	            	String cip=parts[0];//received client ip
+	            	if(cip.equals("localhost"))
+	            		cip="127.0.0.1";
+	            	String groupIp=parts[1];//group ip for the received client ip
+	            	
+					boolean bMatch=false;
+					for(int i=0;i<client.ipAddresses.size();i++)
+					{
+System.out.println(client.ipAddresses.get(i)+"_"+cip);
+		            	if(cip.equals(client.ipAddresses.get(i)))
+		            	{
+		            		bMatch=true;
+		            		break;
+		            	}
+					}
+					
+					if(bMatch==true){
+	            		receiverSocket.leaveGroup(group);
+		            	receiverSocket.close();
+	            		client.startReceiver(groupIp);
+	            		client.bGroupIpReceived=true;
+	            		break;
+	            	}
+	            }
+				
+			}catch (SocketTimeoutException ex){
+//				sendSocket.send(sendPacket);
+			} catch (SocketException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			catch (ClassNotFoundException e) {
+                e.printStackTrace();
+			}
+		}
+	}
+}
+
+
 class ClientUDPReceiver implements Runnable{
 	
 	Client client;
 	MulticastSocket receiverSocket;
+	InetAddress group;
 	
-	public ClientUDPReceiver(Client client) {
+	public ClientUDPReceiver(Client client, String sgroupIp) {
 		this.client = client;
 		try {
 			receiverSocket = new MulticastSocket(Util.MULTI_PORT);
-			InetAddress group = InetAddress.getByName(Util.GROUP_ADDRESS);
+			group = InetAddress.getByName(sgroupIp);
 			receiverSocket.joinGroup(group);
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -234,11 +354,19 @@ class ClientUDPReceiver implements Runnable{
 		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		while (true) {
 			try{
+System.out.println("Client UDP receiver of group " + group.getHostAddress() + " working now....");
 				receiverSocket.setSoTimeout(2000);
 				receiverSocket.receive(receivePacket);
 //				String received = new String(receivePacket.getData(),0,receivePacket.getLength());
 //				System.out.println("Received: " + received);
-				client.updateClient(receivePacket.getData());
+				boolean bpause=client.updateClient(receivePacket.getData());
+				if(bpause==true){
+					receiverSocket.leaveGroup(group);
+	            	receiverSocket.close();
+	            	client.startGroupIpReceiver();
+	            	client.bGroupIpReceived=false;
+	            	break;
+				}
 //				client.updateClient(received);
 			}catch (SocketTimeoutException ex){
 //				sendSocket.send(sendPacket);
@@ -250,6 +378,7 @@ class ClientUDPReceiver implements Runnable{
 		}
 	}
 }
+
 
 
 class ClientUDPSender implements Runnable{
@@ -291,27 +420,34 @@ class ClientUDPSender implements Runnable{
 			sendSocket.send(sendPacket);
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
-		
+		}		
 	}
 	
 	@Override
 	public void run() {
-            while (true) {
-                //JOptionPane.showMessageDialog(null, "test");
-                if(!client.started){
-                    if (!client.connected) {
-                            connect(client.clientID);
-
-                    }else{
-                            connect(new String(client.clientID + "-RECEIVED"));
-                    }                   
-                }
-                try {
-                        Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
-            }
+		try {
+	        while (true) {
+	            //JOptionPane.showMessageDialog(null, "test");
+	            if(!client.started){
+	            	
+	            	if (client.bGroupIpReceived){
+	                	connect(new String(client.clientID + "-GROUPIPGET"));	                	
+	                    Thread.sleep(500);	                    
+	                }
+	            	
+	                if (client.connected==false) {
+	                	connect(client.clientID);
+	                }
+	                else{
+	                    connect(new String(client.clientID + "-RECEIVED"));
+	                }
+	            }
+	            	            
+	            Thread.sleep(1000);
+	            
+	        }
+		} catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 	}
 }

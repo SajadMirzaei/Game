@@ -39,7 +39,6 @@ public class WaveManager extends Thread{
         this.server=server;
     }
     
-    
     public void setGameFinished(boolean b){
     	this.gameFinished=b;
     }
@@ -51,23 +50,17 @@ public class WaveManager extends Thread{
     
     public void setFirstGame(){
     	if(cp.getNumOfWaves()<=0){
-    		Setting setting=new Setting();
-    		GameStatus status=new GameStatus();
-    		server.setSettingStatus(setting, status);
-    	}
-    		
-    	else{
-	    	Setting setting=cp.getGameWave(icurWave).getGame(icurGame).getSettings();
-	    	GameStatus status=cp.getGameWave(icurWave).getGame(icurGame).getStatus();
-	    	
-	    	server.setSettingStatus(setting, status);
+    		ObjectSortingGame objGame=new ObjectSortingGame();
+    		server.setSettingStatusList(objGame);
+    	}   		
+    	else{    		
+    		server.setSettingStatusList(cp.getGameWave(icurWave).getGame(icurGame));
     	}
     }
     
     @Override
-    public void run(){
-    	
-        timeThreshold=cp.getGameWave(icurWave).getGame(icurGame).getSettings().maxRunningTime;
+    public void run(){    	
+        timeThreshold=cp.getGameWave(icurWave).getGame(icurGame).getGameTime();
         startTime = System.currentTimeMillis();
         while(true){
             curTime = System.currentTimeMillis();
@@ -91,7 +84,7 @@ public class WaveManager extends Thread{
                         icurGame=0;
                         GameWave curGW=cp.getGameWave(icurWave);
                         ObjectSortingGame curGame=curGW.getGame(icurGame);
-                        timeThreshold=cp.getGameWave(icurWave).getGame(icurGame).getSettings().maxRunningTime;
+                        timeThreshold=cp.getGameWave(icurWave).getGame(icurGame).getGameTime();
                         
                         server.startNewGame(curGame);
                         startTime = System.currentTimeMillis();
@@ -101,7 +94,7 @@ public class WaveManager extends Thread{
                     this.gameFinished=false;
                     GameWave curGW=cp.getGameWave(icurWave);
                     ObjectSortingGame curGame=curGW.getGame(icurGame);
-                    timeThreshold=cp.getGameWave(icurWave).getGame(icurGame).getSettings().maxRunningTime;
+                    timeThreshold=cp.getGameWave(icurWave).getGame(icurGame).getGameTime();
                     
                     server.startNewGame(curGame);
                     startTime = System.currentTimeMillis();

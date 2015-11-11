@@ -1,196 +1,256 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ExperimentDescription Version="1">
-
-	<GeneralSetting>
-		<ScreenSize x="1500" y="500"/>
-		<Object type="1" r="255" g="255" b="255"/>
-		<Object type="2" r="0" g="0" b="255"/>
-		<Object type="3" r="255" g="255" b="0"/>
-		<SourceAttender>
-			<SelfColor r="0" g="128" b="0"/>
-			<OtherColor r="0" g="255" b="0"/>
-			<SelfSize>30</SelfSize>
-			<OtherSize>30</OtherSize>
-			<SpeedCarrying>30</SpeedCarrying>
-			<SpeedUnladen>30</SpeedUnladen>
-		</SourceAttender>
-		<SinkAttender>
-			<SelfColor r="255" g="165" b="0"/>
-			<OtherColor r="255" g="0" b="0"/>
-			<SelfSize>30</SelfSize>
-			<OtherSize>30</OtherSize>
-			<SpeedCarrying>30</SpeedCarrying>
-			<SpeedUnladen>30</SpeedUnladen>
-		</SinkAttender>
-	</GeneralSetting>
-	<SourceDescription>
-		<LeftBoundary>50</LeftBoundary>
-		<Source Number="1">
-			<Rate>0</Rate>
-			<Proportions>
-				<Object type="1" proportion="0.33"/>
-				<Object type="2" proportion="0.33"/>
-				<Object type="3" proportion="0.34"/>
-			</Proportions>
-			<Location> 
-				<X>400</X>
-				<Y>250</Y>
-			</Location>
-			<Appearance>
-				<Color r="0" g="0" b="0"/>
-				<Size>80</Size>
-			</Appearance>
-		</Source>
-	</SourceDescription>
-	
-	<SinkDescription>
-		<RightBoundary>450</RightBoundary>
-		<Sink Number="1">
-			<TargetType>1</TargetType>
-			<Location> 
-				<X>50</X>
-				<Y>50</Y>
-			</Location>
-			<Appearance>
-				<Color r="255" g="255" b="255"/>
-				<Size>50</Size>
-			</Appearance>
-		</Sink>
-		<Sink Number="2">
-			<TargetType>2</TargetType>
-			<Location> 
-				<X>50</X>
-				<Y>250</Y>
-			</Location>
-			<Appearance>
-				<Color r="0" g="0" b="255"/>
-				<Size>50</Size>
-			</Appearance>
-		</Sink>
-		<Sink Number="3">
-			<TargetType>3</TargetType>
-			<Location> 
-				<X>50</X>
-				<Y>350</Y>
-			</Location>
-			<Appearance>
-				<Color r="255" g="255" b="0"/>
-				<Size>50</Size>
-			</Appearance>
-		</Sink>
-	</SinkDescription>
-
-	<BaseDescription>
-		<Base Number="1" enabled="false">
-			<Location> 
-				<X>475</X>
-				<Y>10</Y>
-			</Location>
-			<Appearance>
-				<Color r="0" g="0" b="0"/>
-				<Size>10</Size>
-			</Appearance>
-		</Base>
-	</BaseDescription>
-
-	<PlayerDescription>
-		<Player Number="1">
-			<Type>1</Type>
-			<SpeedMultiplier>1</SpeedMultiplier>
-			<Location>
-				<X>400</X>
-				<Y>50</Y>
-			</Location>
-		</Player>
-		<Player Number="2">
-			<Type>2</Type>
-			<SpeedMultiplier>1</SpeedMultiplier>
-			<Location>
-				<X>100</X>
-				<Y>50</Y>
-			</Location>
-		</Player>
-		<Player Number="3">
-			<Type>1</Type>
-			<SpeedMultiplier>1</SpeedMultiplier>
-			<Location>
-				<X>400</X>
-				<Y>50</Y>
-			</Location>
-		</Player>
-		<Player Number="4">
-			<Type>2</Type>
-			<SpeedMultiplier>1</SpeedMultiplier>
-			<Location>
-				<X>100</X>
-				<Y>50</Y>
-			</Location>
-		</Player>
-	</PlayerDescription>
-	
-	<FeedbackDisplay>
-	   <TimeWindow>60</TimeWindow>
-	   <MaxDropOffRate>10</MaxDropOffRate>
-	   <GameEndCriterion>5</GameEndCriterion>
-	</FeedbackDisplay>
-
+<ExperimentDescription Version="1">	
 	<WaveDescription Number="1">
-	    <Game Description="1">
-	      <Players>
-	       	<Player>1</Player>
-	       	<Player>2</Player>
-	       	<Player>3</Player>
-	      	<Player>4</Player>
-	      	<Player>5</Player>
-	      	<Player>6</Player>
-	      </Players>
-	      <GameParameters>
-	        <TimeOut>6000000</TimeOut>
-	        <DifferentGroup>0</DifferentGroup>
-	      </GameParameters>
-	    </Game>
-	    <Game Description="2">
-	      <Players>
-	       <Player>1</Player>
-	       <Player>2</Player>
-	       <Player>3</Player>
-	       <Player>4</Player>
-	      </Players>
-	      <GameParameters>
-	        <TimeOut>120000</TimeOut>
-	        <DifferentGroup>0</DifferentGroup>
-	      </GameParameters>
-	    </Game>
+		<GeneralSetting>
+			<ScreenSize x="1500" y="500"/>
+			<Object type="1" r="255" g="255" b="255"/>
+			<Object type="2" r="0" g="0" b="255"/>
+			<SourceAttender>
+				<SelfColor r="0" g="128" b="0"/>
+				<OtherColor r="0" g="255" b="0"/>
+				<SelfSize>30</SelfSize>
+				<OtherSize>30</OtherSize>
+				<SpeedCarrying>30</SpeedCarrying>
+				<SpeedUnladen>30</SpeedUnladen>
+			</SourceAttender>
+			<SinkAttender>
+				<SelfColor r="255" g="165" b="0"/>
+				<OtherColor r="255" g="0" b="0"/>
+				<SelfSize>30</SelfSize>
+				<OtherSize>30</OtherSize>
+				<SpeedCarrying>10</SpeedCarrying>
+				<SpeedUnladen>10</SpeedUnladen>
+			</SinkAttender>
+		</GeneralSetting>
+		<SourceDescription>
+			<LeftBoundary>500</LeftBoundary>
+			<Source Number="1">
+				<Rate>0</Rate>
+				<Proportions>
+					<Object type="1" proportion="0.5"/>
+					<Object type="2" proportion="0.5"/>
+				</Proportions>
+				<Location> 
+					<X>1250</X>
+					<Y>250</Y>
+				</Location>
+				<Appearance>
+					<Color r="0" g="0" b="0"/>
+					<Size>80</Size>
+				</Appearance>
+			</Source>
+		</SourceDescription>		
+		<SinkDescription>
+			<RightBoundary>1000</RightBoundary>
+			<Sink Number="1">
+				<TargetType>1</TargetType>
+				<Location> 
+					<X>250</X>
+					<Y>100</Y>
+				</Location>
+				<Appearance>
+					<Color r="255" g="255" b="255"/>
+					<Size>50</Size>
+				</Appearance>
+			</Sink>
+			<Sink Number="2">
+				<TargetType>2</TargetType>
+				<Location> 
+					<X>250</X>
+					<Y>400</Y>
+				</Location>
+				<Appearance>
+					<Color r="0" g="0" b="255"/>
+					<Size>50</Size>
+				</Appearance>
+			</Sink>
+		</SinkDescription>	
+		<BaseDescription>
+			<Base Number="1" enabled="false">
+				<Location> 
+					<X>475</X>
+					<Y>10</Y>
+				</Location>
+				<Appearance>
+					<Color r="0" g="0" b="0"/>
+					<Size>10</Size>
+				</Appearance>
+			</Base>
+		</BaseDescription>
+		<FeedbackDisplay>
+  		<TimeWindow>60</TimeWindow>
+  		<MaxDropOffRate>20</MaxDropOffRate>
+  		<GameEndCriterion>10</GameEndCriterion>
+		</FeedbackDisplay>
+		
+		<GameParameters>
+        <TimeOut>30000</TimeOut>
+        <DifferentGroup>0</DifferentGroup>
+    </GameParameters>
+    
+    <Game Description="1">    	
+			<Group Number="1">
+				<Player Number="1">
+					<Type>1</Type>
+					<SpeedMultiplier>1</SpeedMultiplier>
+					<Location>
+						<X>750</X>
+						<Y>250</Y>
+					</Location>
+				</Player>			
+			</Group>
+			
+			<Group Number="2">
+				<Player Number="2">
+					<Type>2</Type>
+					<SpeedMultiplier>1</SpeedMultiplier>
+					<Location>
+						<X>450</X>
+						<Y>250</Y>
+					</Location>
+				</Player>			
+			</Group>	
+		</Game>
 	</WaveDescription>
 	
-	<WaveDescription Number="2">
-    <Game Description="1">
-      <Players>
-       	<Player>1</Player>
-       	<Player>2</Player>
-       	<Player>3</Player>
-      	<Player>4</Player>
-      	<Player>5</Player>
-      	<Player>6</Player>
-      </Players>
-      <GameParameters>
-        <TimeOut>1000000</TimeOut>
+
+	<WaveDescription Number="2">		
+		<GeneralSetting>
+			<ScreenSize x="1500" y="1000"/>
+			<Object type="1" r="255" g="0" b="0"/>
+			<Object type="2" r="255" g="255" b="255"/>
+			<Object type="3" r="0" g="255" b="0"/>
+			<Object type="4" r="0" g="0" b="255"/>
+			<SourceAttender>
+				<SelfColor r="0" g="128" b="0"/>
+				<OtherColor r="0" g="255" b="0"/>
+				<SelfSize>30</SelfSize>
+				<OtherSize>30</OtherSize>
+				<SpeedCarrying>20</SpeedCarrying>
+				<SpeedUnladen>20</SpeedUnladen>
+			</SourceAttender>
+			<SinkAttender>
+				<SelfColor r="255" g="165" b="0"/>
+				<OtherColor r="255" g="0" b="0"/>
+				<SelfSize>30</SelfSize>
+				<OtherSize>30</OtherSize>
+				<SpeedCarrying>20</SpeedCarrying>
+				<SpeedUnladen>20</SpeedUnladen>
+			</SinkAttender>
+		</GeneralSetting>
+		
+		<SourceDescription>
+			<LeftBoundary>500</LeftBoundary>
+			<Source Number="1">
+				<Rate>0</Rate>
+				<Proportions>
+					<Object type="1" proportion="0.25"/>
+					<Object type="2" proportion="0.25"/>
+					<Object type="3" proportion="0.25"/>
+					<Object type="4" proportion="0.25"/>
+				</Proportions>
+				<Location> 
+					<X>1250</X>
+					<Y>250</Y>
+				</Location>
+				<Appearance>
+					<Color r="0" g="0" b="0"/>
+					<Size>80</Size>
+				</Appearance>
+			</Source>
+		</SourceDescription>	
+		<SinkDescription>
+			<RightBoundary>1000</RightBoundary>
+			<Sink Number="1">
+				<TargetType>1</TargetType>
+				<Location> 
+					<X>100</X>
+					<Y>100</Y>
+				</Location>
+				<Appearance>
+					<Color r="255" g="0" b="0"/>
+					<Size>50</Size>
+				</Appearance>
+			</Sink>
+			<Sink Number="2">
+				<TargetType>2</TargetType>
+				<Location> 
+					<X>100</X>
+					<Y>400</Y>
+				</Location>
+				<Appearance>
+					<Color r="255" g="255" b="255"/>
+					<Size>50</Size>
+				</Appearance>
+			</Sink>
+			<Sink Number="3">
+				<TargetType>3</TargetType>
+				<Location> 
+					<X>400</X>
+					<Y>400</Y>
+				</Location>
+				<Appearance>
+					<Color r="0" g="255" b="0"/>
+					<Size>50</Size>
+				</Appearance>
+			</Sink>
+			<Sink Number="4">
+				<TargetType>4</TargetType>
+				<Location> 
+					<X>400</X>
+					<Y>100</Y>
+				</Location>
+				<Appearance>
+					<Color r="0" g="0" b="255"/>
+					<Size>50</Size>
+				</Appearance>
+			</Sink>
+		</SinkDescription>
+		<BaseDescription>
+			<Base Number="1" enabled="false">
+				<Location> 
+					<X>475</X>
+					<Y>10</Y>
+				</Location>
+				<Appearance>
+					<Color r="0" g="0" b="0"/>
+					<Size>10</Size>
+				</Appearance>
+			</Base>
+		</BaseDescription>
+		<FeedbackDisplay>
+  		<TimeWindow>60</TimeWindow>
+  		<MaxDropOffRate>20</MaxDropOffRate>
+  		<GameEndCriterion>10</GameEndCriterion>
+		</FeedbackDisplay>
+		
+		<GameParameters>
+        <TimeOut>30000</TimeOut>
         <DifferentGroup>0</DifferentGroup>
-      </GameParameters>
-    </Game>
-    <Game Description="2">
-      <Players>
-       <Player>1</Player>
-       <Player>2</Player>
-       <Player>3</Player>
-       <Player>4</Player>
-      </Players>
-      <GameParameters>
-        <TimeOut>1000000</TimeOut>
-        <DifferentGroup>0</DifferentGroup>
-      </GameParameters>
-    </Game>
+    </GameParameters>
+    
+    <Game Description="1">    	
+			<Group Number="1">
+				<Player Number="1">
+					<Type>1</Type>
+					<SpeedMultiplier>1</SpeedMultiplier>
+					<Location>
+						<X>750</X>
+						<Y>250</Y>
+					</Location>
+				</Player>			
+			</Group>
+			
+			<Group Number="2">
+				<Player Number="2">
+					<Type>2</Type>
+					<SpeedMultiplier>1</SpeedMultiplier>
+					<Location>
+						<X>450</X>
+						<Y>250</Y>
+					</Location>
+				</Player>			
+			</Group>	
+		</Game>
 	</WaveDescription>
-	
-	<IntermissionPreLife>10</IntermissionPreLife>
 </ExperimentDescription>

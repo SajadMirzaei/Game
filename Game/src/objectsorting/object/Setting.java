@@ -12,7 +12,7 @@ import objects.Util;
 public class Setting implements Serializable{
 	
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	public List<Source> sourceList = new ArrayList<>();
@@ -52,6 +52,42 @@ public class Setting implements Serializable{
 
 	public Setting() {
 		// TODO Auto-generated constructor stub
+	}
+	
+	public void copyGeneralInfo(Setting setting){
+		for(Source source:setting.sourceList){
+			sourceList.add(source);
+		}
+		for(Sink sink:setting.sinkList){
+			sinkList.add(sink);
+		}
+		for(Base base:setting.baseList){
+			baseList.add(base);
+		}
+		
+		this.line1Position=setting.line1Position;
+		this.line2Position=setting.line2Position;
+		this.timeWindow=setting.timeWindow;
+		this.maxDropOffRate=setting.maxDropOffRate;
+		this.gameEndCriterion=setting.gameEndCriterion;
+		this.maxRunningTime=setting.maxRunningTime;
+		this.screenSize[0]=setting.screenSize[0];
+		this.screenSize[1]=setting.screenSize[1];
+		this.soSelfColor=setting.soSelfColor;
+		this.soOtherColor=setting.soOtherColor;
+		this.siSelfColor=setting.siSelfColor;
+		this.siOtherColor=setting.siOtherColor;
+		this.soSelfSize=setting.soSelfSize;
+		this.soOtherSize=setting.soOtherSize;
+		this.siSelfSize=setting.siSelfSize;
+		this.siOtherSize=setting.siOtherSize;
+		this.soSpeedCarrying=setting.soSpeedCarrying;
+		this.soSpeedUnladen=setting.soSpeedUnladen;
+		this.siSpeedCarrying=setting.siSpeedCarrying;
+		this.siSpeedUnladen=setting.siSpeedUnladen;
+		this.objectCarryingSize=setting.objectCarryingSize;
+		this.objectCarryingColor=setting.objectCarryingColor;
+		this.objectColors=setting.objectColors;
 	}
 	
 //	public Setting(String str) {

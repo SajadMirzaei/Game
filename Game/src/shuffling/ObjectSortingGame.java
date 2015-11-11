@@ -14,35 +14,33 @@ import objectsorting.object.GameStatus;
  * @author Chong Chu
  */
 public class ObjectSortingGame {
+	
+	public ArrayList<Setting> groupSettingList;
+	public ArrayList<GameStatus> groupStatusList;
+	
+	
     private String description;
     private GameParameter gamepar;
-    private Setting setting;
-    private GameStatus status;
+    
     
     public ObjectSortingGame(){
         this.description="";
         gamepar=new GameParameter();
+        groupSettingList=new ArrayList<Setting>();
+        groupSettingList.clear();
+        groupStatusList=new ArrayList<GameStatus>();
+        groupStatusList.clear();
+        
     }
     
-    public void setSettings(Setting setting){
-    	this.setting=setting;
-    }
-    
-    public Setting getSettings(){
-    	return this.setting;
-    }
-    
-    public void setStatus(GameStatus status){
-    	this.status=status;
-    }
-    
-    public GameStatus getStatus(){
-    	return this.status;
-    }
     
     public void setGameParameters(String sGoalNums, String timeout, String allowMatches, String diffGroup){
         
         gamepar.setTimeOut(Long.parseLong(timeout));
+    }
+    
+    public void setGameTime(long timeout){
+    	gamepar.setTimeOut(timeout);
     }
     
     public long getGameTime(){

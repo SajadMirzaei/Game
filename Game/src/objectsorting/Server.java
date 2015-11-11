@@ -12,6 +12,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,6 +42,7 @@ import org.jdom2.input.SAXBuilder;
 import shuffling.ObjectSortingGame;
 import shuffling.WaveManager;
 
+
 public class Server extends JFrame {
 
 	public InetAddress group = InetAddress.getByName(Util.GROUP_ADDRESS);
@@ -48,24 +50,33 @@ public class Server extends JFrame {
 	JButton button;
 	DatagramSocket sendSocket;
 	Thread senderThread;
-
-	Sender sender;
+	
+	ManageSender mngSender;
+	public ArrayList<GroupSender> grpsenders=new ArrayList<GroupSender>();
+	
 	public static boolean started;
 	public static boolean startButtonPushed;
+	public static boolean allClientsReceivedGIp;
 	private Set<String> readyClients = new HashSet<String>();
 	private Set<String> clients = new HashSet<String>();
-
-	public static Setting setting;
-	public static GameStatus status;
+	private ArrayList<String> clients_info=new ArrayList<String>();
+	public static ArrayList<String> clients_ip=new ArrayList<String>();
+	private Set<String> clients_getGIp = new HashSet<String>();//record the clients already received group id 
 	
-
-	private String sconfig;
-	private int playInitialPos[][];
+	public static ArrayList<Integer> groupIndex=new ArrayList<Integer>(); // for groupIndex[i], save the group number of i
+	public static ArrayList<String> newGroupIp=new ArrayList<String>();
+	public static ArrayList<Boolean> allGroupsRunning=new ArrayList<Boolean>();
 	
+	public static ArrayList<Setting> settingList=new ArrayList<Setting>();
+	public static ArrayList<GameStatus> statusList=new ArrayList<GameStatus>();
+	public static int totalPlayerNum=0;
+	public static boolean bGroupIpAllSet=false;
+	public int totalAssigned=0;
+
 	private static Server server;
 	public static WaveManager wavemngr;
 	public static boolean bGamePaused;
-        public boolean bfirstGame;
+    public boolean bfirstGame;
         
 	public Server() throws Exception {
 		super("Server");
@@ -73,9 +84,22 @@ public class Server extends JFrame {
 		initializeFrame();
 		started = false;
 		startButtonPushed=false;
-                bGamePaused=false;
-                bfirstGame=true;
-                
+		allClientsReceivedGIp=false;
+        bGamePaused=false;
+        bfirstGame=true;
+        bGroupIpAllSet=false;
+        settingList.clear();
+        statusList.clear();
+        totalPlayerNum=0;
+        clients.clear();
+        readyClients.clear();
+        clients_getGIp.clear();
+        clients_info.clear();
+        clients_ip.clear();
+        grpsenders.clear();
+        groupIndex.clear();
+        newGroupIp.clear();
+        allGroupsRunning.clear();
 	}
 
 	private void initializeFrame() {
@@ -95,7 +119,7 @@ public class Server extends JFrame {
 				synchronized (this) {
 					// System.out.println("startButtonPushed = true");
 					startButtonPushed = true;
-                                        bfirstGame=false;
+                    bfirstGame=false;
 				}
 				wavemngr.start(); // start the thread
 			}
@@ -117,39 +141,13 @@ public class Server extends JFrame {
 		setVisible(true);
 	}
 
-	// public String getDataFromPositions() {
-	// String result = "";
-	// for (String key : playersMap.keySet()) {
-	// Player p = playersMap.get(key);
-	// String newKey = key.toString();
-	// if (p.getCarrying() == 1) {
-	// newKey += Util.CARRYING_SIGN_1;
-	// } else if (p.getCarrying() == 2) {
-	// newKey += Util.CARRYING_SIGN_2;
-	// }
-	// result += newKey + Util.ID_SEPERATOR + p.getPosition()[0]
-	// + Util.POSITION_SEPERATOR + p.getPosition()[1];
-	// result += Util.PLAYER_SEPERATOR;
-	// }
-	// result = result.substring(0, result.length() - 1);
-	// if (numberOfSinkedObjects == 0) {
-	// result += Util.PLAYER_SEPERATOR + Util.RATE_INDICATOR
-	// + Util.ID_SEPERATOR + 0;
-	// } else {
-	// result += Util.PLAYER_SEPERATOR + Util.RATE_INDICATOR
-	// + Util.ID_SEPERATOR + (double) numberOfRightSinkedObjects
-	// / (double) numberOfSinkedObjects;
-	// }
-	// return result;
-	// }
-
 
 	public static void main(String args[]) {
 		try {
-			server = new Server();			
+			server = new Server();
 			wavemngr = new WaveManager(server);
-			String sconfig = "../setting.xml";
-                        //String sconfig = "G:\\Others\\DepOfPhy\\Game-master\\Game\\bin\\test_wave1.xml";
+			//String sconfig = "../setting.xml";
+            String sconfig = "G:\\setting.xml";
 			wavemngr.loadConfiguration(sconfig);
 			wavemngr.setFirstGame();
 			
@@ -166,25 +164,21 @@ public class Server extends JFrame {
 		}
 	}
         
-    public void setSettingStatus(Setting setting, GameStatus status){
-		this.setting=setting;
-		this.status=status;
-		this.status.setSetting(setting);
-                
-        int m=status.players.size();
-        int n1=setting.screenSize[0];
-        int n2=setting.screenSize[1];
-                
-	}
+	
 	
     public void sendPauseCmd()
     {
         try{
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            String content="PAUSE";
-            oos.writeObject(content);
-            sender.send(baos.toByteArray());
+        	int nGroups=Server.settingList.size();
+    		for(int i=0;i<nGroups;i++){
+    			GroupSender gsender=this.grpsenders.get(i);
+    			
+	            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	            ObjectOutputStream oos = new ObjectOutputStream(baos);
+	            String content="PAUSE";
+	            oos.writeObject(content);
+	            gsender.send(baos.toByteArray());
+    		}
         } catch (IOException e) {
                 e.printStackTrace();
         }
@@ -192,25 +186,18 @@ public class Server extends JFrame {
         
 	public void stopCurrentGame() {
 		//send out "PAUSE" command to all players
-                
 		synchronized (this) {
-                        bGamePaused=true;
+            bGamePaused=true;
 			started = false;
 			startButtonPushed = false;
-			clients.clear();
-			this.readyClients.clear();
+			
+			for(int i=0;i<Server.statusList.size();i++){// all groups need to be paused
+				Server.statusList.get(i).gameRunning=false;
+			}
 		}
 		clientTextArea.append("Current game is finished or time out! \n");
-		                
-
-		//this.button.setEnabled(true);
-		// try {
-		// Thread.sleep(15000);
-		// } catch (InterruptedException e) {
-		// e.printStackTrace();
-		// }
 	}
-
+	
 	public void broadCastAllFinished() {
 		synchronized (this) {
 			started = false;
@@ -219,84 +206,190 @@ public class Server extends JFrame {
 		clientTextArea.append("All the waves has been finished! \n");
 	}
 	
-
+    public void setSettingStatusList(ObjectSortingGame curGame){
+    	Server.settingList.clear();
+    	Server.statusList.clear();
+    	int nGroups=curGame.groupSettingList.size();
+    	
+    	int start=20;
+    	for(int i=0;i<nGroups;i++){
+    		
+    		String newip="224.0.0."+String.valueOf(start+i);   		
+    		newGroupIp.add(newip);
+    		allGroupsRunning.add(true);
+    		
+    		Setting curSetting=curGame.groupSettingList.get(i);
+    		GameStatus curStatus=curGame.groupStatusList.get(i);
+    		Server.settingList.add(curSetting);
+    		curStatus.setSetting(curSetting);
+    		Server.statusList.add(curStatus);
+    		
+    		int ngroupNumSize=curSetting.playerList.size();
+    		totalPlayerNum+=ngroupNumSize;
+    		
+    		for(int j=0;j<ngroupNumSize;j++){
+    			this.groupIndex.add(-1);
+    		}	
+    	}
+    	
+    	for(int i=0;i<nGroups;i++){
+    		Setting curSetting=curGame.groupSettingList.get(i);
+    		int ngroupNumSize=curSetting.playerList.size();
+    		for(int j=0;j<ngroupNumSize;j++){
+    			int curId=Integer.parseInt(curSetting.playerList.get(j).getId());
+    			this.groupIndex.set(curId-1, i);
+    		}
+    	}   	
+    }
+	
+    public void cleanOldGameStatus(){
+    	synchronized (this) {
+	    	allClientsReceivedGIp=false;
+			clients.clear();
+			clients_info.clear();
+			clients_ip.clear();
+			clients_getGIp.clear();
+			this.readyClients.clear();
+			groupIndex.clear();
+			bGroupIpAllSet=false;
+			
+			for(int i=0;i<grpsenders.size();i++)
+				grpsenders.get(i).closeSocket();
+			grpsenders.clear();
+			newGroupIp.clear();
+			allGroupsRunning.clear();
+		}
+    }
+    
 	public void startNewGame(ObjectSortingGame curGame) {
+		
+		cleanOldGameStatus();
+		
 		try {
 			Thread.sleep(15000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		
-		setSettingStatus(curGame.getSettings(),curGame.getStatus());
+		totalPlayerNum=0;
+		totalAssigned=0;
+		setSettingStatusList(curGame);
 		restartGame();
 		
-		clientTextArea.append("New game started! \n");
+		clientTextArea.append("New wave started! \n");
 		
 		synchronized (this) {
-                        bGamePaused=false;
+            bGamePaused=false;
+		}
+		
+		mngSender = null;
+		mngSender = new ManageSender(this);
+		senderThread=null;
+		senderThread = new Thread(mngSender, "ManageSender");
+		senderThread.start();
+		
+	}
+		
+	public void startThreads() {
+		Thread receiver = new Thread(new Receiver(this), "Receiver");
+		receiver.start();
+		
+		mngSender = new ManageSender(this);
+		senderThread = new Thread(mngSender, "ManageSender");
+		senderThread.start();
+	}
+    
+	
+	public void startGroupSenderThreads(){
+		int nGroups=Server.settingList.size();
+		for(int i=0;i<nGroups;i++){
+			String newip=Server.newGroupIp.get(i);
+			GroupSender gsender=new GroupSender(this,newip,i);
+			grpsenders.add(gsender);
+			Thread gsenderThread=new Thread(gsender,"GroupSender");
+			gsenderThread.start();
 		}
 	}
 	
-	
-	public void startThreads() {
-		sender = new Sender(this);
-		Thread receiver = new Thread(new Receiver(this), "Sender");
-		receiver.start();
-		senderThread = new Thread(sender, "Receiver");
-		senderThread.start();
-	}
-        
-	public void restartGame() {
-		status.gameRunning = true;
-		status.rate = 0;
-		for (Player player : status.players) {
-			status.playerDropOffMap.get(player.getId()).clear();
-			player.setCarrying(0);
-			player.setDropOffs(0);
+	public void restartGame() {	
+		for(GameStatus status:Server.statusList){
+			status.gameRunning = true;
+			status.rate = 0;
+			for (Player player : status.players) {
+				status.playerDropOffMap.get(player.getId()).clear();
+				player.setCarrying(0);
+				player.setDropOffs(0);
+			}		
 		}
 	}
 	
 	public void setGameFinished(){
 		wavemngr.setGameFinished(true);
 	}
-        
-    private void delayAWhile(int msec)
-    {
-        try {
-                    Thread.sleep(msec);
-            } catch (InterruptedException e) {
-                    e.printStackTrace();
-            }
-    }
-        
+    
+	
     public void updateServer(String sentence, InetAddress inetAddress) {
-       if (!sentence.contains(",")) {
-			if (!sentence.contains("RECEIVED")) {
-				if (!clients.contains(sentence)) {
-					status.assignPlayer(sentence);
-					clients.add(sentence);
-					clientTextArea.append("Player connected from IP Address"
-							+ inetAddress + "\n");
-                                                                               
-                                        if(clients.size()== setting.playerList.size() && bfirstGame==false)
-                                        {                                            
-                                            startButtonPushed = true;
-                                        }
-			}
-                                
-            } else {
-				// ACKNOWLEDGMENT by client in sent
+       if (sentence.contains(",")==false) {
+			if (sentence.contains("RECEIVED")==false) {
+				if(sentence.contains("GROUPIPGET")==false){
+					if (clients.contains(sentence)==false) {
+						clients.add(sentence);
+						clients_info.add(sentence);
+						String ipaddress=inetAddress.getHostAddress();
+						if(ipaddress.equals("localhost"))
+							ipaddress="127.0.0.1";
+						clients_ip.add(ipaddress);
+						clientTextArea.append("Player connected from IP Address"
+								+ inetAddress.getHostAddress() + "\n");
+						
+						if(clients.size()==Server.totalPlayerNum){
+							for(int i=0;i<clients_info.size();i++){
+								int igroup=groupIndex.get(i);
+								GameStatus iStatus=Server.statusList.get(igroup);
+								iStatus.assignPlayer(clients_info.get(i));
+							}
+							
+							for(int i=0;i<Server.statusList.size();i++){
+			                	GameStatus status=Server.statusList.get(i);
+			                	totalAssigned += status.getNumberOfAssignedPlayers();
+			                }
+						}
+						
+						if(clients.size()== Server.totalPlayerNum && bfirstGame==false){
+		                    startButtonPushed = true;
+		                }
+					}
+				}
+				else{
+					if(!clients_getGIp.contains(sentence)){
+						clients_getGIp.add(sentence);
+						
+						clientTextArea.append("Player with IP Address"
+								+ inetAddress + " received new Group IP!\n");
+						
+						if(clients_getGIp.size()==Server.totalPlayerNum){
+							allClientsReceivedGIp=true;
+						}
+					}
+				}
+				
+            } 		
+			else {
+				// ACKNOWLEDGMENT by client in sent 
 				String[] splited = sentence.split(Util.ID_SEPERATOR);                               
-                                readyClients.add(splited[0]);
-
-				if (readyClients.size() == status.getNumberOfAssignedPlayers()) {
-					// System.out.println("All acks received");
+                readyClients.add(splited[0]);
+                
+				if (readyClients.size() == totalAssigned) {				
 					synchronized (this) {
 						// System.out.println("started = true");
-						status.startTimeMillis = System.currentTimeMillis();
-						started = true;
-						status.gameRunning = true;
-
+						long starttime=System.currentTimeMillis();
+						for(int i=0;i<Server.statusList.size();i++){
+		                	GameStatus status=Server.statusList.get(i);
+							status.startTimeMillis = starttime;
+							
+							started = true;
+							status.gameRunning = true;
+						}
 					}
 				}
             }
@@ -311,15 +404,30 @@ public class Server extends JFrame {
 			int[] position = new int[] {
 					Integer.valueOf(data[1].split(Util.POSITION_SEPERATOR)[0]),
 					Integer.valueOf(data[1].split(Util.POSITION_SEPERATOR)[1]) };
+			
+			//check belong to which group, then get the status and setting
+			String clientId=data[0];
+			int groupId=-1;
+			for(int i=0;i<clients_info.size();i++){
+				if(clients_info.get(i).equals(clientId) == true){
+					groupId = groupIndex.get(i);
+					break;
+				}
+			}
+			
+			GameStatus status=this.statusList.get(groupId);
+			Setting setting=this.settingList.get(groupId);
+			
 			for (Player player : status.players) {
 				if (data[0].equals(player.getId())) {
-					updateStatus(player, position);
+
+					updateStatus(player, position, setting, status);
 				}
 			}
 		}
 	}
 
-	private void updateStatus(Player player, int[] position) {
+	private void updateStatus(Player player, int[] position, Setting setting, GameStatus status) {
 		player.setPosition(position);
 		if (player.isSourceAttender()) {
 			if (player.getCarrying() != 0) {
@@ -414,7 +522,6 @@ public class Server extends JFrame {
 }
 
 class Receiver implements Runnable {
-
 	Server server;
 	DatagramSocket receiverSocket;
 
@@ -459,12 +566,122 @@ class Receiver implements Runnable {
 	}
 }
 
-class Sender implements Runnable {
 
+class GroupSender implements Runnable {
+	Server server;
+	DatagramSocket sendSocket;
+	InetAddress newgroup;
+	int groupId;
+	public GroupSender(Server server, String newip, int gId) {
+		this.server = server;
+		try {
+			newgroup = InetAddress.getByName(newip);
+			sendSocket = new DatagramSocket();
+			groupId=gId;
+		} catch (SocketException | UnknownHostException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void send(String s) {//how to send to specified groups
+		// System.out.println("Sending: " + s);
+		byte[] sendData = s.getBytes();
+		DatagramPacket sendPacket = new DatagramPacket(sendData,
+				sendData.length, newgroup, Util.MULTI_PORT); 
+		try {
+			sendSocket.send(sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void send(byte[] b) {//
+		// System.out.println("Sending: " + s);
+		DatagramPacket sendPacket = new DatagramPacket(b, b.length,
+				newgroup, Util.MULTI_PORT);
+		try {
+			sendSocket.send(sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void closeSocket(){
+		sendSocket.close();
+	}
+
+	@Override
+	public void run() {
+		while (true) {
+			try {
+				
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				ObjectOutputStream oos = new ObjectOutputStream(baos);
+				if (server.started) {
+					boolean btemp=false;
+					
+					GameStatus status=server.statusList.get(groupId);
+					status.update();
+					
+					server.allGroupsRunning.set(groupId, status.gameRunning);					
+					for(int i=0;i<server.statusList.size();i++){
+						btemp= btemp | server.allGroupsRunning.get(i);
+					}
+										
+					if (btemp==false) {//all groups has finished
+						//Thread.sleep(5000);
+						//server.restartGame();
+						server.setGameFinished();
+						
+						//start the ManageSender now
+						baos.flush();
+						baos.close();
+						oos.close();
+						//sendSocket.close();
+						break;//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					}
+					
+					if(status.gameRunning==true){
+						oos.writeObject(status);
+						send(baos.toByteArray());	
+					}
+					else{
+//TBD: should let the group clients know the game is finished
+					}
+				} 
+//				else if(server.allClientsReceivedGIp){
+//					oos.writeObject("SendSettingNow");
+//					send(baos.toByteArray());
+//					Thread.sleep(1000);
+//				}
+				else if (server.startButtonPushed && server.allClientsReceivedGIp) {
+					
+					Setting setting=server.settingList.get(groupId);						
+					oos.writeObject(setting);
+					send(baos.toByteArray());
+					Thread.sleep(1000);
+				} else {
+					Thread.sleep(1000);
+				}
+				baos.flush();
+				baos.close();
+				oos.close();
+			} catch (InterruptedException e) {
+				server.clientTextArea.append(e.toString());
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+}
+
+
+class ManageSender implements Runnable {
 	Server server;
 	DatagramSocket sendSocket;
 
-	public Sender(Server server) {
+	public ManageSender(Server server) {
 		this.server = server;
 		try {
 			sendSocket = new DatagramSocket();
@@ -473,7 +690,7 @@ class Sender implements Runnable {
 		}
 	}
 
-	public void send(String s) {
+	public void send(String s) {//how to send to specified groups to
 		// System.out.println("Sending: " + s);
 		byte[] sendData = s.getBytes();
 		DatagramPacket sendPacket = new DatagramPacket(sendData,
@@ -496,36 +713,39 @@ class Sender implements Runnable {
 		}
 	}
 
+	
 	@Override
 	public void run() {
 		while (true) {
-			try {
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ObjectOutputStream oos = new ObjectOutputStream(baos);
-				if (server.started) {
-					// String positionData = server.status.toString();
-					server.status.update();
-					oos.writeObject(server.status);
-					send(baos.toByteArray());
-					// send(positionData);
-//					Thread.sleep(10);
-					if (!server.status.gameRunning) {
-						//Thread.sleep(5000);
-						//server.restartGame();//
-						server.setGameFinished();
+			try {				
+				if (server.startButtonPushed) {
+					int nplayers=server.clients_ip.size();
+					for(int i=0;i<nplayers;i++){//for each player, we broadcast its ip
+						int groupid=server.groupIndex.get(i);
+						String newgip=server.newGroupIp.get(groupid);
+						String content="GROUP_IP:"+server.clients_ip.get(i)+"_"+newgip;		
+System.out.println(content);
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						ObjectOutputStream oos = new ObjectOutputStream(baos);
+						oos.writeObject(content);
+						send(baos.toByteArray());
+						baos.flush();
+						baos.close();
+						oos.close();
+						Thread.sleep(1000);
 					}
-				} else if (server.startButtonPushed) {
-					Setting asetting=server.setting;
-					oos.writeObject(server.setting);
-					send(baos.toByteArray());
-					// send(server.setting.toString());
-					Thread.sleep(1000);
+					
+					if(server.allClientsReceivedGIp==true){		
+						sendSocket.close();
+						server.startGroupSenderThreads();
+						break;
+					}
+					
+					Thread.sleep(100);
 				} else {
 					Thread.sleep(1000);
 				}
-				baos.flush();
-				baos.close();
-				oos.close();
+				
 			} catch (InterruptedException e) {
 				server.clientTextArea.append(e.toString());
 				e.printStackTrace();

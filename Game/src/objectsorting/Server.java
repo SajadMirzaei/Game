@@ -158,7 +158,6 @@ public class Server extends JFrame {
 			
 			server.startThreads();
 			
-			
 		} catch (Exception e) {
 			JDialog d = new JDialog(server);
 			d.getContentPane()

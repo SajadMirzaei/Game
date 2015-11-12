@@ -231,8 +231,8 @@ public class Client extends JFrame{
 	    	    while(ee.hasMoreElements()) {
 	    	        InetAddress ia= (InetAddress) ee.nextElement();
 	    	        String sip=ia.getHostAddress();
-	    	        //if(sip.equals("127.0.0.1"))
-	    	        //	continue;
+	    	        if(sip.equals("127.0.0.1"))
+	    	        	continue;
 	    	        ipAddresses.add(sip);
 //System.out.println(ia.getHostAddress());
 	    	    }

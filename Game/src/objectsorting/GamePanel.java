@@ -80,9 +80,9 @@ public class GamePanel extends JPanel{
 	
 	public boolean started = false;
 	
-	public static Setting setting = new Setting();
-	public static GameStatus status = new GameStatus();
-	public static Player player = new Player();
+	public Setting setting = new Setting();
+	public GameStatus status = new GameStatus();
+	public Player player = new Player();
 	
 	BoundedRangeModel overallProgressBarModel;
 	BoundedRangeModel individualProgressBarModel;
@@ -189,6 +189,11 @@ public class GamePanel extends JPanel{
         			}
         		}
         	}
+        	if (status.wrongObjectAlert) {
+    			g.setColor(Color.RED);
+    			g.setFont(new Font(Font.DIALOG, Font.BOLD, 30));
+    			g.drawChars("WRONG".toCharArray(), 0, 5, setting.screenSize[0]/2 - 50, setting.screenSize[1]/2 - 50);
+    		}
         	if (player.isSourceAttender()) {
         		g.setColor(setting.soSelfColor);
         		g.fillOval(player.getPosition()[0]-setting.soSelfSize/2, player.getPosition()[1]-setting.soSelfSize/2, setting.soSelfSize, setting.soSelfSize);
@@ -226,7 +231,7 @@ public class GamePanel extends JPanel{
 		}else{
 			g.setColor(Color.GREEN);
 			g.setFont(new Font(Font.DIALOG, Font.BOLD, 72));
-			g.drawChars("You Won or Time Out!".toCharArray(), 0, 7, setting.screenSize[0]/2-100, setting.screenSize[1]/2);
+			g.drawChars("You Won".toCharArray(), 0, 7, setting.screenSize[0]/2-100, setting.screenSize[1]/2);
 			g.setFont(new Font(Font.DIALOG, Font.ITALIC, 36));
 			g.drawChars("Wait for the next game to start".toCharArray(), 0, 31, setting.screenSize[0]/2-100, setting.screenSize[1]/2+100);
 		}

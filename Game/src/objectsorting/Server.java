@@ -12,7 +12,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -23,7 +22,6 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
@@ -42,7 +40,6 @@ import org.jdom2.input.SAXBuilder;
 import shuffling.ObjectSortingGame;
 import shuffling.WaveManager;
 
-
 public class Server extends JFrame {
 
 	public InetAddress group = InetAddress.getByName(Util.GROUP_ADDRESS);
@@ -50,61 +47,266 @@ public class Server extends JFrame {
 	JButton button;
 	DatagramSocket sendSocket;
 	Thread senderThread;
-	
-	ManageSender mngSender;
-	public ArrayList<GroupSender> grpsenders=new ArrayList<GroupSender>();
-	
-	public static boolean started;
-	public static boolean startButtonPushed;
-	public static boolean allClientsReceivedGIp;
+
+	Sender sender;
+	public boolean started;
+	public boolean startButtonPushed;
 	private Set<String> readyClients = new HashSet<String>();
 	private Set<String> clients = new HashSet<String>();
-	private ArrayList<String> clients_info=new ArrayList<String>();
-	public static ArrayList<String> clients_ip=new ArrayList<String>();
-	public static ArrayList<String> temp_clients=new ArrayList<String>();
-	private Set<String> clients_getGIp = new HashSet<String>();//record the clients already received group id 
-	
-	public static ArrayList<Integer> groupIndex=new ArrayList<Integer>(); // for groupIndex[i], save the group number of i
-	public static ArrayList<String> newGroupIp=new ArrayList<String>();
-	public static ArrayList<Boolean> allGroupsRunning=new ArrayList<Boolean>();
-	
-	public static ArrayList<Setting> settingList=new ArrayList<Setting>();
-	public static ArrayList<GameStatus> statusList=new ArrayList<GameStatus>();
-	public static int totalPlayerNum=0;
-	public static boolean bGroupIpAllSet=false;
-	public int totalAssigned=0;
 
+	public Setting setting;
+	public GameStatus status;
+	public WaveManager wavemngr;
+
+	private String sconfig;
+	private int playInitialPos[][];
+	
 	private static Server server;
-	public static WaveManager wavemngr;
-	public static boolean bGamePaused;
-    public boolean bfirstGame;
-    public static boolean bAllGameNotifiedToStop=false;
-    public static boolean bNewClientIdReached=true;
-        
+
 	public Server() throws Exception {
 		super("Server");
-		
+		status = new GameStatus();
+		sconfig = "../setting.xml";
+		readConfigs(sconfig);
+
+		// save initial player positions
+		int numOfPlayers = status.players.size();
+		playInitialPos = new int[numOfPlayers][2];
+		for (int i = 0; i < numOfPlayers; i++) {
+			playInitialPos[i] = status.players.get(i).getPosition();
+		}
+
+		status.setSetting(setting);
 		initializeFrame();
 		started = false;
-		startButtonPushed=false;
-		allClientsReceivedGIp=false;
-        bGamePaused=false;
-        bfirstGame=true;
-        bGroupIpAllSet=false;
-        settingList.clear();
-        statusList.clear();
-        totalPlayerNum=0;
-        clients.clear();
-        readyClients.clear();
-        clients_getGIp.clear();
-        clients_info.clear();
-        clients_ip.clear();
-        grpsenders.clear();
-        groupIndex.clear();
-        newGroupIp.clear();
-        allGroupsRunning.clear();
-        bAllGameNotifiedToStop=false;
-        temp_clients.clear();
+
+		wavemngr = new WaveManager(this);
+		wavemngr.loadConfiguration(sconfig);
+	}
+
+	public void stopCurrentGame() {
+		synchronized (this) {
+			started = false;
+			startButtonPushed = false;
+		}
+		clientTextArea.append("Current game is finished or time out! \n");
+
+		// try {
+		// Thread.sleep(15000);
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// }
+	}
+
+	public void broadCastAllFinished() {
+		synchronized (this) {
+			started = false;
+			startButtonPushed = false;
+		}
+		clientTextArea.append("All the waves has been finished! \n");
+	}
+
+	private void initialGameInfo() {
+		// reset to the initial positions
+		int numOfPlayers = status.players.size();
+		for (int i = 0; i < numOfPlayers; i++) {
+			updateStatus(status.players.get(i), playInitialPos[i]);
+		}
+	}
+
+	public void startNewGame(ObjectSortingGame curGame) {
+		try {
+			Thread.sleep(15000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		clientTextArea.append("New game started! \n");
+		initialGameInfo();
+
+		synchronized (this) {
+			started = true;
+			startButtonPushed = true;
+		}
+
+	}
+
+	private void readConfigs(String url) {
+		setting = new Setting();
+		SAXBuilder sxb = new SAXBuilder();
+		try {
+			Document configDoc = sxb.build(Util.load(url));
+			Element rootElmt = configDoc.getRootElement();
+			Iterator<Element> iterator = rootElmt.getChildren().iterator();
+			while (iterator.hasNext()) {
+				Element element = iterator.next();
+				if (element.getName().equals("GeneralSetting")) {
+					Element screenSizeChild = element.getChild("ScreenSize");
+					setting.screenSize[0] = Integer.valueOf(screenSizeChild
+							.getAttributeValue("x"));
+					setting.screenSize[1] = Integer.valueOf(screenSizeChild
+							.getAttributeValue("y"));
+					List<Element> settingElements = element.getChildren("Object");
+					for (Element element2 : settingElements) {
+						Color color = new Color(Integer.valueOf(element2.getAttributeValue("r")),Integer.valueOf(element2.getAttributeValue("g")),Integer.valueOf(element2.getAttributeValue("b")));
+						setting.objectColors.put(Integer.valueOf(element2.getAttributeValue("type")), color);
+					}
+					Element settingElement = element.getChild("SourceAttender");
+					Element colorElement = settingElement.getChild("SelfColor");
+					Color color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
+					setting.soSelfColor = color;
+					colorElement = settingElement.getChild("OtherColor");
+					color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
+					setting.soOtherColor = color;
+					setting.soSelfSize = Integer.valueOf(settingElement.getChild("SelfSize").getValue());
+					setting.soOtherSize = Integer.valueOf(settingElement.getChild("OtherSize").getValue());
+					setting.soSpeedCarrying = Integer.valueOf(settingElement.getChild("SpeedCarrying").getValue());
+					setting.soSpeedUnladen = Integer.valueOf(settingElement.getChild("SpeedUnladen").getValue());
+					settingElement = element.getChild("SinkAttender");
+					colorElement = settingElement.getChild("SelfColor");
+					color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
+					setting.siSelfColor = color;
+					colorElement = settingElement.getChild("OtherColor");
+					color = new Color(Integer.valueOf(colorElement.getAttributeValue("r")),Integer.valueOf(colorElement.getAttributeValue("g")),Integer.valueOf(colorElement.getAttributeValue("b")));
+					setting.siOtherColor = color;
+					setting.siSelfSize = Integer.valueOf(settingElement.getChild("SelfSize").getValue());
+					setting.siOtherSize = Integer.valueOf(settingElement.getChild("OtherSize").getValue());
+					setting.siSpeedCarrying = Integer.valueOf(settingElement.getChild("SpeedCarrying").getValue());
+					setting.siSpeedUnladen = Integer.valueOf(settingElement.getChild("SpeedUnladen").getValue());
+					// SOURCE READ
+				} else if (element.getName().equals("SourceDescription")) {
+					setting.line1Position = Integer.valueOf(element.getChild(
+							"LeftBoundary").getValue());
+					List<Element> sourceList = element.getChildren("Source");
+					for (Element sourceElement : sourceList) {
+						Source source = new Source();
+						source.setId(sourceElement.getAttributeValue("Number"));
+						List<Element> objects = sourceElement.getChild("Proportions").getChildren();
+						double sum = 0;
+						for (Element element2 : objects) {
+							source.getProportionMap().put(Integer.valueOf(element2.getAttributeValue("type")), Double.valueOf(element2.getAttributeValue("proportion")));
+							sum += Double.valueOf(element2.getAttributeValue("proportion"));
+						}
+						if (sum != 1) {
+							throw new Exception("Proportion values should add up to 1");
+						}
+						source.setPosition(new int[] {
+								Integer.valueOf(sourceElement
+										.getChild("Location").getChild("X")
+										.getValue()),
+								Integer.valueOf(sourceElement
+										.getChild("Location").getChild("Y")
+										.getValue()) });
+						source.setSize(Integer.valueOf(sourceElement
+								.getChild("Appearance").getChild("Size")
+								.getValue()));
+						Element colorElement = sourceElement.getChild("Appearance").getChild("Color");
+						source.setColor(new Color(Integer.valueOf(colorElement
+								.getAttributeValue("r")), Integer
+								.valueOf(colorElement.getAttributeValue("g")),
+								Integer.valueOf(colorElement
+										.getAttributeValue("b"))));
+						setting.sourceList.add(source);
+					}
+					// SINK READ
+				} else if (element.getName().equals("SinkDescription")) {
+					setting.line2Position = Integer.valueOf(element.getChild(
+							"RightBoundary").getValue());
+					List<Element> sinkList = element.getChildren("Sink");
+					for (Element sinkElement : sinkList) {
+						Sink sink = new Sink();
+						sink.setId(sinkElement.getAttributeValue("Number"));
+						sink.setPosition(new int[] {
+								Integer.valueOf(sinkElement
+										.getChild("Location").getChild("X")
+										.getValue()),
+								Integer.valueOf(sinkElement
+										.getChild("Location").getChild("Y")
+										.getValue()) });
+						sink.setAcceptingObject(Integer.valueOf(sinkElement.getChild("TargetType").getValue()));
+						sink.setSize(Integer.valueOf(sinkElement
+								.getChild("Appearance").getChild("Size")
+								.getValue()));
+						Element colorElement = sinkElement.getChild("Appearance").getChild("Color");
+						sink.setColor(new Color(Integer.valueOf(colorElement
+								.getAttributeValue("r")), Integer
+								.valueOf(colorElement.getAttributeValue("g")),
+								Integer.valueOf(colorElement
+										.getAttributeValue("b"))));
+						setting.sinkList.add(sink);
+					}
+					// BASE READ
+				} else if (element.getName().equals("BaseDescription")) {
+					List<Element> baseList = element.getChildren();
+					for (Element baseElement : baseList) {
+						Base base = new Base();
+						base.setId(baseElement.getAttributeValue("Number"));
+						base.setPosition(new int[] {
+								Integer.valueOf(baseElement
+										.getChild("Location").getChild("X")
+										.getValue()),
+								Integer.valueOf(baseElement
+										.getChild("Location").getChild("Y")
+										.getValue()) });
+						base.setSize(Integer.valueOf(baseElement
+								.getChild("Appearance").getChild("Size")
+								.getValue()));
+						Element colorElement = baseElement.getChild("Appearance").getChild("Color");
+						base.setColor(new Color(Integer.valueOf(colorElement
+								.getAttributeValue("r")), Integer
+								.valueOf(colorElement.getAttributeValue("g")),
+								Integer.valueOf(colorElement
+										.getAttributeValue("b"))));
+						if (baseElement.getAttribute("enabled")
+								.getBooleanValue()) {
+							setting.baseList.add(base);
+						}
+					}
+				} else if (element.getName().equals("PlayerDescription")) {
+					List<Element> playerList = element.getChildren();
+					for (Element playerElement : playerList) {
+						Player player = new Player();
+						player.setId(playerElement.getAttributeValue("Number"));
+						player.setSpeedMultiplier(Double.valueOf(playerElement.getChild("SpeedMultiplier").getValue()));
+						player.setPosition(new int[] {
+								Integer.valueOf(playerElement
+										.getChild("Location").getChild("X")
+										.getValue()),
+								Integer.valueOf(playerElement
+										.getChild("Location").getChild("Y")
+										.getValue()) });
+						player.setSourceAttender((playerElement
+								.getChild("Type").getValue().equals("1")));
+						setting.playerList.add(player);
+						status.players.add(player);
+						status.playerDropOffMap.put(player.getId(),
+								new ArrayList<Long>());
+					}
+				} else if (element.getName().equals("FeedbackDisplay")) {
+					setting.gameEndCriterion = Integer.valueOf(element
+							.getChild("GameEndCriterion").getValue());
+					setting.maxDropOffRate = Integer.valueOf(element.getChild(
+							"MaxDropOffRate").getValue());
+					setting.timeWindow = Integer.valueOf(element.getChild(
+							"TimeWindow").getValue());
+				}
+			}
+		} catch (Exception e) {
+			JDialog d = new JDialog(this);
+			d.getContentPane()
+					.add(new JTextArea("Error Reading Setting File: \n" + e.getMessage()));
+			d.setSize(300, 300);
+			d.setVisible(true);
+			e.printStackTrace();
+		}
+	}
+
+	public void startThreads() {
+		sender = new Sender(this);
+		Thread receiver = new Thread(new Receiver(this), "Sender");
+		receiver.start();
+		senderThread = new Thread(sender, "Receiver");
+		senderThread.start();
 	}
 
 	private void initializeFrame() {
@@ -124,7 +326,6 @@ public class Server extends JFrame {
 				synchronized (this) {
 					// System.out.println("startButtonPushed = true");
 					startButtonPushed = true;
-                    bfirstGame=false;
 				}
 				wavemngr.start(); // start the thread
 			}
@@ -139,329 +340,85 @@ public class Server extends JFrame {
 			}
 		});
 
-		// Set up 
+		// Set up
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		pack();
 		setSize(new Dimension(300, 300));
 		setVisible(true);
 	}
 
+	// public String getDataFromPositions() {
+	// String result = "";
+	// for (String key : playersMap.keySet()) {
+	// Player p = playersMap.get(key);
+	// String newKey = key.toString();
+	// if (p.getCarrying() == 1) {
+	// newKey += Util.CARRYING_SIGN_1;
+	// } else if (p.getCarrying() == 2) {
+	// newKey += Util.CARRYING_SIGN_2;
+	// }
+	// result += newKey + Util.ID_SEPERATOR + p.getPosition()[0]
+	// + Util.POSITION_SEPERATOR + p.getPosition()[1];
+	// result += Util.PLAYER_SEPERATOR;
+	// }
+	// result = result.substring(0, result.length() - 1);
+	// if (numberOfSinkedObjects == 0) {
+	// result += Util.PLAYER_SEPERATOR + Util.RATE_INDICATOR
+	// + Util.ID_SEPERATOR + 0;
+	// } else {
+	// result += Util.PLAYER_SEPERATOR + Util.RATE_INDICATOR
+	// + Util.ID_SEPERATOR + (double) numberOfRightSinkedObjects
+	// / (double) numberOfSinkedObjects;
+	// }
+	// return result;
+	// }
 
-	public static void main(String args[]) {
-		try {
-			server = new Server();
-			wavemngr = new WaveManager(server);
-			String sconfig = "../setting.xml";
-            //String sconfig = "G:\\setting.xml";
-			wavemngr.loadConfiguration(sconfig);
-			wavemngr.setFirstGame();
-			
-			server.startThreads();
-			
-		} catch (Exception e) {
-			JDialog d = new JDialog(server);
-			d.getContentPane()
-					.add(new JTextArea("Error: \n" + e.getMessage() + "\n" + e.toString()));
-			d.setSize(300, 300);
-			d.setVisible(true);
-			e.printStackTrace();
-		}
-	}
-	
-    private void delayAWhile(int msec)
-    {
-        try {
-                    Thread.sleep(msec);
-            } catch (InterruptedException e) {
-                    e.printStackTrace();
-            }
-    }  
-	
-    public void sendPauseCmd()
-    {
-        try{
-        	int nGroups=Server.settingList.size();
-    		for(int i=0;i<nGroups;i++){
-//System.out.println("Server send PAUSE to group: "+String.valueOf(i));
-    			GroupSender gsender=this.grpsenders.get(i);
-    			
-	            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	            ObjectOutputStream oos = new ObjectOutputStream(baos);
-	            String content="PAUSE";
-	            oos.writeObject(content);
-	            gsender.send(baos.toByteArray());
-	            
-	            baos.flush();
-				baos.close();
-				oos.close();
-	            
-    		}
-        } catch (IOException e) {
-                e.printStackTrace();
-        }
-    }
-    
-        
-	public void stopCurrentGame() {
-		//send out "PAUSE" command to all players
-		synchronized (this) {
-            bGamePaused=true;
-			started = false;
-			startButtonPushed = false;
-			
-			for(int i=0;i<Server.statusList.size();i++){// all groups need to be paused
-				Server.statusList.get(i).gameRunning=false;
-				allGroupsRunning.set(i, false);
-			}
-		}
-		clientTextArea.append("Current game is finished or time out! \n");
-		
-	}
-	
-	public void broadCastAllFinished() {
-		synchronized (this) {
-			started = false;
-			startButtonPushed = false;
-		}
-		clientTextArea.append("All the waves has been finished! \n");
-	}
-	
-    public void setSettingStatusList(ObjectSortingGame curGame){
-    	Server.settingList.clear();
-    	Server.statusList.clear();
-    	int nGroups=curGame.groupSettingList.size();
-    	
-    	int start=20;
-    	for(int i=0;i<nGroups;i++){
-    		
-    		String newip="224.0.0."+String.valueOf(start+i);   		
-    		newGroupIp.add(newip);
-    		allGroupsRunning.add(true);
-    		
-    		Setting curSetting=curGame.groupSettingList.get(i);
-    		GameStatus curStatus=curGame.groupStatusList.get(i);
-    		Server.settingList.add(curSetting);
-    		curStatus.setSetting(curSetting);
-    		Server.statusList.add(curStatus);
-    		
-    		int ngroupNumSize=curSetting.playerList.size();
-    		totalPlayerNum+=ngroupNumSize;
-    		
-    		for(int j=0;j<ngroupNumSize;j++){
-    			this.groupIndex.add(-1);
-    		}	
-    	}
-
-//System.out.println("Total number of players is "+String.valueOf(totalPlayerNum));
-    	
-    	for(int i=0;i<nGroups;i++){
-    		Setting curSetting=curGame.groupSettingList.get(i);
-    		int ngroupNumSize=curSetting.playerList.size();
-    		for(int j=0;j<ngroupNumSize;j++){
-    			int curId=Integer.parseInt(curSetting.playerList.get(j).getId());
-    			this.groupIndex.set(curId-1, i);
-    		}
-    	}   	
-    }
-	
-    public void cleanOldGameStatus(){
-    	synchronized (this) {
-	    	allClientsReceivedGIp=false;
-			clients.clear();
-			clients_info.clear();
-			clients_ip.clear();
-			clients_getGIp.clear();
-			this.readyClients.clear();
-			groupIndex.clear();
-			bGroupIpAllSet=false;
-//System.out.println("clean group senders");
-			for(int i=0;i<grpsenders.size();i++)
-				grpsenders.get(i).closeSocket();
-			grpsenders.clear();
-			newGroupIp.clear();
-			allGroupsRunning.clear();
-			temp_clients.clear();
-		}
-    }
-    
-	public void startNewGame(ObjectSortingGame curGame) {
-		
-		cleanOldGameStatus();
-		
-		try {
-			Thread.sleep(15000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		totalPlayerNum=0;
-		totalAssigned=0;
-		setSettingStatusList(curGame);
-		restartGame();
-		
-		clientTextArea.append("New wave started! \n");
-		synchronized (this) {
-            bGamePaused=false;
-		}
-
-		
-		mngSender = null;
-		mngSender = new ManageSender(this);
-		senderThread=null;
-		senderThread = new Thread(mngSender, "ManageSender");
-		senderThread.start();
-		
-	}
-		
-	public void startThreads() {
-		Thread receiver = new Thread(new Receiver(this), "Receiver");
-		receiver.start();
-		
-		mngSender = new ManageSender(this);
-		senderThread = new Thread(mngSender, "ManageSender");
-		senderThread.start();
-	}
-    
-	
-	public void startGroupSenderThreads(){
-		int nGroups=Server.settingList.size();
-		for(int i=0;i<nGroups;i++){
-			String newip=Server.newGroupIp.get(i);
-			GroupSender gsender=new GroupSender(this,newip,i);
-			grpsenders.add(gsender);
-			Thread gsenderThread=new Thread(gsender,"GroupSender");
-			gsenderThread.start();
-		}
-		
-//System.out.println("Sender size is:" + String.valueOf(grpsenders.size()));
-	}
-	
-	public void restartGame() {	
-		for(GameStatus status:Server.statusList){
-			status.gameRunning = true;
-			status.rate = 0;
-			for (Player player : status.players) {
-				status.playerDropOffMap.get(player.getId()).clear();
-				player.setCarrying(0);
-				player.setDropOffs(0);
-			}		
-		}
-	}
-	
-	public void setGameFinished(){
-		wavemngr.setGameFinished(true);
-	}
-    
-	
-    public void updateServer(String sentence, InetAddress inetAddress) {	
-       if (sentence.contains(",")==false) {
-			if (sentence.contains("RECEIVED")==false) {
-				if(sentence.contains("GROUPIPGET")==false){
-					if (clients.contains(sentence)==false) {
-						//if(bNewClientIdReached==true)
-						//{
-						clients.add(sentence);
-						clients_info.add(sentence);
-						//}
-						String ipaddress=inetAddress.getHostAddress();
-						if(ipaddress.equals("localhost"))
-							ipaddress="127.0.0.1";
-						clients_ip.add(ipaddress);
-						clientTextArea.append("Player connected from IP Address"
-								+ inetAddress.getHostAddress() + "\n");
-						
-						if(clients.size()==Server.totalPlayerNum){
-							for(int i=0;i<clients_info.size();i++){
-								int igroup=groupIndex.get(i);
-								GameStatus iStatus=Server.statusList.get(igroup);
-								iStatus.assignPlayer(clients_info.get(i));
-							}
-							
-							for(int i=0;i<Server.statusList.size();i++){
-			                	GameStatus status=Server.statusList.get(i);
-			                	totalAssigned += status.getNumberOfAssignedPlayers();
-			                }
-						}
-						
-						if(clients.size()== Server.totalPlayerNum && bfirstGame==false){
-		                    startButtonPushed = true;
-		                }
-					}
+	public void updateServer(String sentence, InetAddress inetAddress) {
+		if (!sentence.contains(",")) {
+			if (!sentence.contains("RECEIVED")) {
+				if (!clients.contains(sentence)) {
+					status.assignPlayer(sentence);
+					clients.add(sentence);
+					clientTextArea.append("Player connected from IP Address"
+							+ inetAddress + "\n");
 				}
-				else{
-					if(!clients_getGIp.contains(sentence)){
-						clients_getGIp.add(sentence);
-						
-						clientTextArea.append("Player with IP Address"
-								+ inetAddress + " received new Group IP!\n");
-
-//System.out.println(String.valueOf(clients_getGIp.size())+"_"+String.valueOf(Server.totalPlayerNum));
-						if(clients_getGIp.size()==Server.totalPlayerNum){
-							allClientsReceivedGIp=true;
-						}
-					}
-				}
-				
-            }
-			else {
+			} else {
 				// ACKNOWLEDGMENT by client in sent
-				String[] splited = sentence.split(Util.ID_SEPERATOR);                               
-                readyClients.add(splited[0]);
-                
-				if (readyClients.size() == totalAssigned) {				
+				String[] splited = sentence.split(Util.ID_SEPERATOR);
+				readyClients.add(splited[0]);
+				if (readyClients.size() == status.getNumberOfAssignedPlayers()) {
+					// System.out.println("All acks received");
 					synchronized (this) {
 						// System.out.println("started = true");
-						long starttime=System.currentTimeMillis();
-						for(int i=0;i<Server.statusList.size();i++){
-		                	GameStatus status=Server.statusList.get(i);
-							status.startTimeMillis = starttime;
-							
-							started = true;
-							status.gameRunning = true;
-						}
+						status.startTimeMillis = System.currentTimeMillis();
+						started = true;
+						status.gameRunning = true;
+						
 					}
 				}
-            }
+			}
 		} else {
-//System.out.println("update outside");
-//            if(startButtonPushed==false)
-//            {
-//System.out.println("update inside");
-//                this.sendPauseCmd();
-//            }
-			bNewClientIdReached=false;
 			// Update positions
 			String[] data = sentence.split(Util.ID_SEPERATOR);
 			int[] position = new int[] {
 					Integer.valueOf(data[1].split(Util.POSITION_SEPERATOR)[0]),
 					Integer.valueOf(data[1].split(Util.POSITION_SEPERATOR)[1]) };
-			
-			//check belong to which group, then get the status and setting
-			String clientId=data[0];
-			int groupId=-1;
-			for(int i=0;i<clients_info.size();i++){
-//System.out.println(clientId+"    "+clients_info.get(i));
-				if(clients_info.get(i).equals(clientId) == true){
-					groupId = groupIndex.get(i);
-					break;
-				}
-			}
-			
-			if(groupId==-1) return;
-			
-			GameStatus status=this.statusList.get(groupId);
-			Setting setting=this.settingList.get(groupId);
-			
 			for (Player player : status.players) {
 				if (data[0].equals(player.getId())) {
-
-					updateStatus(player, position, setting, status);
+					updateStatus(player, position);
 				}
 			}
 		}
 	}
 
-	private void updateStatus(Player player, int[] position, Setting setting, GameStatus status) {
+	private void updateStatus(Player player, int[] position) {
+		if (status.wrongObjectAlert) {
+			status.wrongObjectAlertCounter ++;
+			if (status.wrongObjectAlertCounter > GameStatus.COUNTER_MAX){
+				status.wrongObjectAlertCounter = 0;
+				status.wrongObjectAlert = false;
+			}
+		}
 		player.setPosition(position);
 		if (player.isSourceAttender()) {
 			if (player.getCarrying() != 0) {
@@ -505,8 +462,13 @@ public class Server extends JFrame {
 							&& position[1] > sinkPosition[1]
 							&& position[1] < sinkPosition[1] + sink.getSize()) {
 						if (player.getCarrying() == sink.getAcceptingObject()) {
+							// right sink
 							status.playerDropOffMap.get(player.getId()).add(
 									System.currentTimeMillis());
+							player.setCarrying(0);
+						}else{
+							// wrong sink
+							status.wrongObjectAlert = true;
 							player.setCarrying(0);
 						}
 					}
@@ -553,9 +515,34 @@ public class Server extends JFrame {
 			}
 		}
 	}
+
+	public static void main(String args[]) {
+		try {
+			server = new Server();
+			server.startThreads();
+		} catch (Exception e) {
+			JDialog d = new JDialog(server);
+			d.getContentPane()
+					.add(new JTextArea("Error: \n" + e.getMessage() + "\n" + e.toString()));
+			d.setSize(300, 300);
+			d.setVisible(true);
+			e.printStackTrace();
+		}
+	}
+
+	public void restartGame() {
+		status.gameRunning = true;
+		status.rate = 0;
+		for (Player player : status.players) {
+			status.playerDropOffMap.get(player.getId()).clear();
+			player.setCarrying(0);
+			player.setDropOffs(0);
+		}
+	}
 }
 
 class Receiver implements Runnable {
+
 	Server server;
 	DatagramSocket receiverSocket;
 
@@ -572,7 +559,6 @@ class Receiver implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
-			
 			try {
 				byte[] receiveData = new byte[1024];
 				DatagramPacket receivePacket = new DatagramPacket(receiveData,
@@ -581,34 +567,7 @@ class Receiver implements Runnable {
 				String sentence = new String(receivePacket.getData(), 0,
 						receivePacket.getLength());
 				// System.out.println("Received: " + sentence);
-							
-				if(server.bGamePaused==false)
-	            {
-					server.updateServer(sentence, receivePacket.getAddress());
-	            }
-	            else{
-	            	if(Server.bAllGameNotifiedToStop==false){
-//System.out.println(String.valueOf(Server.totalPlayerNum)+"  "+sentence);
-						if (sentence.contains(",")==true)
-								server.sendPauseCmd();
-		            	if (sentence.contains(",")==false && sentence.contains("-RECEIVED")==false 
-		            			&& sentence.contains("-GROUPIPGET")==false && Server.temp_clients.contains(sentence)==false) {	            		
-		            		Server.temp_clients.add(sentence);
-		            	
-		            		if(Server.temp_clients.size()==Server.totalPlayerNum){
-//System.out.println("All clients notified!!!");
-		            			Server.bAllGameNotifiedToStop=true;
-		            			Server.bNewClientIdReached=true;
-		            		}
-		            		
-			                try{
-			                    Thread.sleep(1000);
-			                }catch (InterruptedException e) {				
-			                	e.printStackTrace();
-			                }
-		            	}
-	            	}
-	            }
+				server.updateServer(sentence, receivePacket.getAddress());
 			} catch (SocketException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -618,116 +577,12 @@ class Receiver implements Runnable {
 	}
 }
 
+class Sender implements Runnable {
 
-class GroupSender implements Runnable {
-	Server server;
-	DatagramSocket sendSocket;
-	InetAddress newgroup;
-	int groupId;
-	public GroupSender(Server server, String newip, int gId) {
-		this.server = server;
-		try {
-			newgroup = InetAddress.getByName(newip);
-			sendSocket = new DatagramSocket();
-			groupId=gId;
-		} catch (SocketException | UnknownHostException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void send(String s) {//how to send to specified groups
-		// System.out.println("Sending: " + s);
-		byte[] sendData = s.getBytes();
-		DatagramPacket sendPacket = new DatagramPacket(sendData,
-				sendData.length, newgroup, Util.MULTI_PORT); 
-		try {
-			sendSocket.send(sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void send(byte[] b) {//object 
-		// System.out.println("Sending: " + s);
-		DatagramPacket sendPacket = new DatagramPacket(b, b.length,
-				newgroup, Util.MULTI_PORT);
-		try {
-			sendSocket.send(sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void closeSocket(){
-		sendSocket.close();
-	}
-
-	@Override
-	public void run() {
-		while (true) {
-			try {
-				
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ObjectOutputStream oos = new ObjectOutputStream(baos);
-				if (server.started) {
-					
-					GameStatus status=server.statusList.get(groupId);
-					status.update();
-					
-					server.allGroupsRunning.set(groupId, status.gameRunning);
-					if(status.gameRunning==true){
-						oos.writeObject(status);
-						send(baos.toByteArray());	
-					}
-					else{
-						String notifySucceed="Succeed";
-						oos.writeObject(notifySucceed);
-						send(baos.toByteArray());
-					}
-				} 
-				else if (server.startButtonPushed && server.allClientsReceivedGIp) {					
-					Setting setting=server.settingList.get(groupId);						
-					oos.writeObject(setting);
-					send(baos.toByteArray());
-					Thread.sleep(1000);
-				} else {
-					Thread.sleep(1000);
-				}
-				baos.flush();
-				baos.close();
-				oos.close();
-				
-				
-				if(server.started==false && server.startButtonPushed==false && server.bGamePaused==true){
-//System.out.println("Check whether game finished!!!");
-					boolean btemp=false;
-					for(int i=0;i<server.allGroupsRunning.size();i++){
-						btemp= btemp || server.allGroupsRunning.get(i);
-					}
-										
-					if (btemp==false) {
-//System.out.println("Group Sender break loop!!!");
-						server.setGameFinished();									
-						break;
-					}
-				}
-				
-			} catch (InterruptedException e) {
-				server.clientTextArea.append(e.toString());
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-}
-
-
-class ManageSender implements Runnable {
 	Server server;
 	DatagramSocket sendSocket;
 
-	public ManageSender(Server server) {
+	public Sender(Server server) {
 		this.server = server;
 		try {
 			sendSocket = new DatagramSocket();
@@ -736,7 +591,7 @@ class ManageSender implements Runnable {
 		}
 	}
 
-	public void send(String s) {//how to send to specified groups to
+	public void send(String s) {
 		// System.out.println("Sending: " + s);
 		byte[] sendData = s.getBytes();
 		DatagramPacket sendPacket = new DatagramPacket(sendData,
@@ -759,40 +614,34 @@ class ManageSender implements Runnable {
 		}
 	}
 
-	
 	@Override
 	public void run() {
 		while (true) {
-			try {				
-				if (server.startButtonPushed) {
-					int nplayers=server.clients_ip.size();
-					for(int i=0;i<nplayers;i++){//for each player, we broadcast its
-						int groupid=server.groupIndex.get(i);
-						String newgip=server.newGroupIp.get(groupid);
-						String content="GROUP_IP:"+server.clients_ip.get(i)+"_"+newgip;
-//System.out.println(content);
-						ByteArrayOutputStream baos = new ByteArrayOutputStream();
-						ObjectOutputStream oos = new ObjectOutputStream(baos);
-						oos.writeObject(content);
-						send(baos.toByteArray());
-						baos.flush();
-						baos.close();
-						oos.close();
-						Thread.sleep(1000);
+			try {
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				ObjectOutputStream oos = new ObjectOutputStream(baos);
+				if (server.started) {
+					// String positionData = server.status.toString();
+					server.status.update();
+					oos.writeObject(server.status);
+					send(baos.toByteArray());
+					// send(positionData);
+					Thread.sleep(10);
+					if (!server.status.gameRunning) {
+						Thread.sleep(5000);
+						server.restartGame();
 					}
-					
-					if(server.allClientsReceivedGIp==true){		
-						sendSocket.close();
-						server.startGroupSenderThreads();
-						break;
-					}
-					
-					Thread.sleep(100);
+				} else if (server.startButtonPushed) {
+					oos.writeObject(server.setting);
+					send(baos.toByteArray());
+					// send(server.setting.toString());
+					Thread.sleep(1000);
 				} else {
-
 					Thread.sleep(1000);
 				}
-				
+				baos.flush();
+				baos.close();
+				oos.close();
 			} catch (InterruptedException e) {
 				server.clientTextArea.append(e.toString());
 				e.printStackTrace();

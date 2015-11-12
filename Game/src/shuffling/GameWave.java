@@ -6,13 +6,13 @@
 package shuffling;
 
 import java.util.ArrayList;
+
 /**
  *
  * @author Chong Chu
  */
 public class GameWave {
     private String waveDscrpAttr;
-    
     private ArrayList<ObjectSortingGame> objectSortingGameList;
     
     public GameWave(){

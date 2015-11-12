@@ -61,6 +61,7 @@ public class Server extends JFrame {
 	private Set<String> clients = new HashSet<String>();
 	private ArrayList<String> clients_info=new ArrayList<String>();
 	public static ArrayList<String> clients_ip=new ArrayList<String>();
+	public static ArrayList<String> temp_clients=new ArrayList<String>();
 	private Set<String> clients_getGIp = new HashSet<String>();//record the clients already received group id 
 	
 	public static ArrayList<Integer> groupIndex=new ArrayList<Integer>(); // for groupIndex[i], save the group number of i
@@ -77,6 +78,7 @@ public class Server extends JFrame {
 	public static WaveManager wavemngr;
 	public static boolean bGamePaused;
     public boolean bfirstGame;
+    public static boolean bAllGameNotifiedToStop=false;
         
 	public Server() throws Exception {
 		super("Server");
@@ -100,6 +102,8 @@ public class Server extends JFrame {
         groupIndex.clear();
         newGroupIp.clear();
         allGroupsRunning.clear();
+        bAllGameNotifiedToStop=false;
+        temp_clients.clear();
 	}
 
 	private void initializeFrame() {
@@ -163,14 +167,22 @@ public class Server extends JFrame {
 			e.printStackTrace();
 		}
 	}
-        
 	
+    private void delayAWhile(int msec)
+    {
+        try {
+                    Thread.sleep(msec);
+            } catch (InterruptedException e) {
+                    e.printStackTrace();
+            }
+    }  
 	
     public void sendPauseCmd()
     {
         try{
         	int nGroups=Server.settingList.size();
     		for(int i=0;i<nGroups;i++){
+System.out.println("Server send PAUSE to group: "+String.valueOf(i));
     			GroupSender gsender=this.grpsenders.get(i);
     			
 	            ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -183,6 +195,7 @@ public class Server extends JFrame {
                 e.printStackTrace();
         }
     }
+    
         
 	public void stopCurrentGame() {
 		//send out "PAUSE" command to all players
@@ -196,6 +209,7 @@ public class Server extends JFrame {
 			}
 		}
 		clientTextArea.append("Current game is finished or time out! \n");
+		
 	}
 	
 	public void broadCastAllFinished() {
@@ -232,7 +246,7 @@ public class Server extends JFrame {
     		}	
     	}
 
-System.out.println("Total number of players is "+String.valueOf(totalPlayerNum));    	
+//System.out.println("Total number of players is "+String.valueOf(totalPlayerNum));
     	
     	for(int i=0;i<nGroups;i++){
     		Setting curSetting=curGame.groupSettingList.get(i);
@@ -254,12 +268,13 @@ System.out.println("Total number of players is "+String.valueOf(totalPlayerNum))
 			this.readyClients.clear();
 			groupIndex.clear();
 			bGroupIpAllSet=false;
-			
+System.out.println("clean group senders");
 			for(int i=0;i<grpsenders.size();i++)
 				grpsenders.get(i).closeSocket();
 			grpsenders.clear();
 			newGroupIp.clear();
 			allGroupsRunning.clear();
+			temp_clients.clear();
 		}
     }
     
@@ -331,6 +346,7 @@ System.out.println("Total number of players is "+String.valueOf(totalPlayerNum))
     
 	
     public void updateServer(String sentence, InetAddress inetAddress) {
+System.out.println("update beginning!");    	
        if (sentence.contains(",")==false) {
 			if (sentence.contains("RECEIVED")==false) {
 				if(sentence.contains("GROUPIPGET")==false){
@@ -368,16 +384,17 @@ System.out.println("Total number of players is "+String.valueOf(totalPlayerNum))
 						
 						clientTextArea.append("Player with IP Address"
 								+ inetAddress + " received new Group IP!\n");
-						
+
+//System.out.println(String.valueOf(clients_getGIp.size())+"_"+String.valueOf(Server.totalPlayerNum));
 						if(clients_getGIp.size()==Server.totalPlayerNum){
 							allClientsReceivedGIp=true;
 						}
 					}
 				}
 				
-            } 		
+            }
 			else {
-				// ACKNOWLEDGMENT by client in sent 
+				// ACKNOWLEDGMENT by client in sent
 				String[] splited = sentence.split(Util.ID_SEPERATOR);                               
                 readyClients.add(splited[0]);
                 
@@ -396,10 +413,12 @@ System.out.println("Total number of players is "+String.valueOf(totalPlayerNum))
 				}
             }
 		} else {
-            if(startButtonPushed==false)
-            {
-                this.sendPauseCmd();
-            }
+//System.out.println("update outside");
+//            if(startButtonPushed==false)
+//            {
+//System.out.println("update inside");
+//                this.sendPauseCmd();
+//            }
                         
 			// Update positions
 			String[] data = sentence.split(Util.ID_SEPERATOR);
@@ -540,30 +559,46 @@ class Receiver implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
-			if(server.bGamePaused==false)
-            {
-				try {
-					byte[] receiveData = new byte[1024];
-					DatagramPacket receivePacket = new DatagramPacket(receiveData,
-							receiveData.length);
-					receiverSocket.receive(receivePacket);
-					String sentence = new String(receivePacket.getData(), 0,
-							receivePacket.getLength());
-					// System.out.println("Received: " + sentence);
+			
+			try {
+				byte[] receiveData = new byte[1024];
+				DatagramPacket receivePacket = new DatagramPacket(receiveData,
+						receiveData.length);
+				receiverSocket.receive(receivePacket);
+				String sentence = new String(receivePacket.getData(), 0,
+						receivePacket.getLength());
+				// System.out.println("Received: " + sentence);
+							
+				if(server.bGamePaused==false)
+	            {
 					server.updateServer(sentence, receivePacket.getAddress());
-				} catch (SocketException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-            }
-            else{
-                try{
-                    Thread.sleep(1000);
-                }catch (InterruptedException e) {				
-                	e.printStackTrace();
-                }
-            }
+	            }
+	            else{
+	            	if(Server.bAllGameNotifiedToStop==false){
+		            	if (sentence.contains(",")==false && sentence.contains("-RECEIVED")==false 
+		            			&& sentence.contains("-GROUPIPGET")==false && Server.temp_clients.contains(sentence)==false) {	            		
+		            		
+		            		server.sendPauseCmd();
+		            		
+		            		Server.temp_clients.add(sentence);
+		            		if(Server.temp_clients.size()==Server.totalPlayerNum){
+System.out.println("All clients notified!!!");
+		            			Server.bAllGameNotifiedToStop=true;
+		            		}
+		            		
+			                try{
+			                    Thread.sleep(1000);
+			                }catch (InterruptedException e) {				
+			                	e.printStackTrace();
+			                }
+		            	}
+	            	}
+	            }
+			} catch (SocketException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
@@ -597,7 +632,7 @@ class GroupSender implements Runnable {
 		}
 	}
 
-	public void send(byte[] b) {//
+	public void send(byte[] b) {//object 
 		// System.out.println("Sending: " + s);
 		DatagramPacket sendPacket = new DatagramPacket(b, b.length,
 				newgroup, Util.MULTI_PORT);
@@ -630,7 +665,7 @@ class GroupSender implements Runnable {
 						btemp= btemp | server.allGroupsRunning.get(i);
 					}
 										
-					if (btemp==false) {//all groups has finished
+					if (btemp==false) {//all groups have succeed, not triggered by time
 						//Thread.sleep(5000);
 						//server.restartGame();
 						server.setGameFinished();
@@ -639,8 +674,8 @@ class GroupSender implements Runnable {
 						baos.flush();
 						baos.close();
 						oos.close();
-						//sendSocket.close();
-						break;//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+						
+						break;
 					}
 					
 					if(status.gameRunning==true){
@@ -651,11 +686,6 @@ class GroupSender implements Runnable {
 //TBD: should let the group clients know the game is finished
 					}
 				} 
-//				else if(server.allClientsReceivedGIp){
-//					oos.writeObject("SendSettingNow");
-//					send(baos.toByteArray());
-//					Thread.sleep(1000);
-//				}
 				else if (server.startButtonPushed && server.allClientsReceivedGIp) {
 					
 					Setting setting=server.settingList.get(groupId);						
@@ -722,11 +752,11 @@ class ManageSender implements Runnable {
 			try {				
 				if (server.startButtonPushed) {
 					int nplayers=server.clients_ip.size();
-					for(int i=0;i<nplayers;i++){//for each player, we broadcast its ip
+					for(int i=0;i<nplayers;i++){//for each player, we broadcast its
 						int groupid=server.groupIndex.get(i);
 						String newgip=server.newGroupIp.get(groupid);
 						String content="GROUP_IP:"+server.clients_ip.get(i)+"_"+newgip;
-System.out.println(content);
+//System.out.println(content);
 						ByteArrayOutputStream baos = new ByteArrayOutputStream();
 						ObjectOutputStream oos = new ObjectOutputStream(baos);
 						oos.writeObject(content);
@@ -745,6 +775,7 @@ System.out.println(content);
 					
 					Thread.sleep(100);
 				} else {
+
 					Thread.sleep(1000);
 				}
 				

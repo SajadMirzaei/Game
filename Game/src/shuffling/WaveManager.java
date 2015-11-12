@@ -69,6 +69,16 @@ public class WaveManager extends Thread{
             if(runTime>=timeThreshold || this.gameFinished==true){
                 //stop the current game
                 server.stopCurrentGame();
+                
+                while(server.bAllGameNotifiedToStop==false){
+                	try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+System.out.println("Block here!!!");
+                }
+                
                 icurGame++;
                 //start the next game or go to next wave
                 int gameSize=cp.getGameWave(icurWave).getNumOfGames();

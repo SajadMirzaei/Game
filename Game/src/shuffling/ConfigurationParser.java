@@ -223,7 +223,7 @@ public class ConfigurationParser extends JFrame {
 			                	
 			                	Setting temp=new Setting();
 				                temp.copyGeneralInfo(setting);
-			                	
+				                GameStatus status = new GameStatus();
 								if (groupElmt.getName().equals("Group")) {
 									List<Element> playerList = groupElmt.getChildren();
 									for (Element playerElement : playerList) {
@@ -241,19 +241,16 @@ public class ConfigurationParser extends JFrame {
 												.getChild("Type").getValue().equals("1")));
 										
 										temp.playerList.add(player);
-										
-										GameStatus status = new GameStatus();
-										
 										status.players.add(player);
 										status.playerDropOffMap.put(player.getId(),
 												new ArrayList<Long>());
 										
-										osgame.groupSettingList.add(temp);	
-										osgame.groupStatusList.add(status);
 									}
+									osgame.groupSettingList.add(temp);	
+									osgame.groupStatusList.add(status);
 								}
-			                }//end of each group								
-						}//end of each game	   
+			                }//end of each group 
+						}//end of each game
 	            	}	                
 	                gamewave.addGame(osgame);
 	                this.gameWaveList.add(gamewave);

@@ -155,11 +155,8 @@ public class Client extends JFrame{
                 }
                 gamePanel.updatePositions((GameStatus) object);
             }
-//            else if(((String)object).contains("SendSettingNow")){
-//System.out.println("Received sendsetting now");
-//            	bGroupIpReceived=false;
-//            }
             else if(((String)object).contains("PAUSE")){
+System.out.println("PAUSE command received!!!");//
                 connected=false;
                 started=false;
                 if(bsameClientId==false)
@@ -234,7 +231,7 @@ public class Client extends JFrame{
 	    	    while(ee.hasMoreElements()) {
 	    	        InetAddress ia= (InetAddress) ee.nextElement();
 	    	        ipAddresses.add(ia.getHostAddress());
-System.out.println(ia.getHostAddress());
+//System.out.println(ia.getHostAddress());
 	    	    }
 	    	 }
     	}catch(Exception e){
@@ -297,7 +294,7 @@ class ClientGroupIPReceiver implements Runnable{
 					boolean bMatch=false;
 					for(int i=0;i<client.ipAddresses.size();i++)
 					{
-System.out.println(client.ipAddresses.get(i)+"_"+cip);
+//System.out.println(client.ipAddresses.get(i)+"_"+cip);
 		            	if(cip.equals(client.ipAddresses.get(i)))
 		            	{
 		            		bMatch=true;

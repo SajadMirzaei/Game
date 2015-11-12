@@ -70,13 +70,13 @@ public class WaveManager extends Thread{
                 //stop the current game
                 server.stopCurrentGame();
                 
-                while(server.bAllGameNotifiedToStop==false){
+                while(Server.bAllGameNotifiedToStop==false){
                 	try {
                         Thread.sleep(2000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-System.out.println("Block here!!!");
+//System.out.println("Block here!!!");
                 }
                 
                 icurGame++;

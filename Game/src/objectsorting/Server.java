@@ -79,6 +79,7 @@ public class Server extends JFrame {
 	public static boolean bGamePaused;
     public boolean bfirstGame;
     public static boolean bAllGameNotifiedToStop=false;
+    public static boolean bNewClientIdReached=true;
         
 	public Server() throws Exception {
 		super("Server");
@@ -150,8 +151,8 @@ public class Server extends JFrame {
 		try {
 			server = new Server();
 			wavemngr = new WaveManager(server);
-			//String sconfig = "../setting.xml";
-            String sconfig = "G:\\setting.xml";
+			String sconfig = "../setting.xml";
+            //String sconfig = "G:\\setting.xml";
 			wavemngr.loadConfiguration(sconfig);
 			wavemngr.setFirstGame();
 			
@@ -182,7 +183,7 @@ public class Server extends JFrame {
         try{
         	int nGroups=Server.settingList.size();
     		for(int i=0;i<nGroups;i++){
-System.out.println("Server send PAUSE to group: "+String.valueOf(i));
+//System.out.println("Server send PAUSE to group: "+String.valueOf(i));
     			GroupSender gsender=this.grpsenders.get(i);
     			
 	            ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -190,6 +191,11 @@ System.out.println("Server send PAUSE to group: "+String.valueOf(i));
 	            String content="PAUSE";
 	            oos.writeObject(content);
 	            gsender.send(baos.toByteArray());
+	            
+	            baos.flush();
+				baos.close();
+				oos.close();
+	            
     		}
         } catch (IOException e) {
                 e.printStackTrace();
@@ -206,6 +212,7 @@ System.out.println("Server send PAUSE to group: "+String.valueOf(i));
 			
 			for(int i=0;i<Server.statusList.size();i++){// all groups need to be paused
 				Server.statusList.get(i).gameRunning=false;
+				allGroupsRunning.set(i, false);
 			}
 		}
 		clientTextArea.append("Current game is finished or time out! \n");
@@ -268,7 +275,7 @@ System.out.println("Server send PAUSE to group: "+String.valueOf(i));
 			this.readyClients.clear();
 			groupIndex.clear();
 			bGroupIpAllSet=false;
-System.out.println("clean group senders");
+//System.out.println("clean group senders");
 			for(int i=0;i<grpsenders.size();i++)
 				grpsenders.get(i).closeSocket();
 			grpsenders.clear();
@@ -294,10 +301,10 @@ System.out.println("clean group senders");
 		restartGame();
 		
 		clientTextArea.append("New wave started! \n");
-		
 		synchronized (this) {
             bGamePaused=false;
 		}
+
 		
 		mngSender = null;
 		mngSender = new ManageSender(this);
@@ -326,6 +333,8 @@ System.out.println("clean group senders");
 			Thread gsenderThread=new Thread(gsender,"GroupSender");
 			gsenderThread.start();
 		}
+		
+//System.out.println("Sender size is:" + String.valueOf(grpsenders.size()));
 	}
 	
 	public void restartGame() {	
@@ -345,14 +354,16 @@ System.out.println("clean group senders");
 	}
     
 	
-    public void updateServer(String sentence, InetAddress inetAddress) {
-System.out.println("update beginning!");    	
+    public void updateServer(String sentence, InetAddress inetAddress) {	
        if (sentence.contains(",")==false) {
 			if (sentence.contains("RECEIVED")==false) {
 				if(sentence.contains("GROUPIPGET")==false){
 					if (clients.contains(sentence)==false) {
-						clients.add(sentence);
-						clients_info.add(sentence);
+						if(bNewClientIdReached==true)
+						{
+							clients.add(sentence);
+							clients_info.add(sentence);
+						}
 						String ipaddress=inetAddress.getHostAddress();
 						if(ipaddress.equals("localhost"))
 							ipaddress="127.0.0.1";
@@ -419,7 +430,7 @@ System.out.println("update beginning!");
 //System.out.println("update inside");
 //                this.sendPauseCmd();
 //            }
-                        
+			bNewClientIdReached=false;
 			// Update positions
 			String[] data = sentence.split(Util.ID_SEPERATOR);
 			int[] position = new int[] {
@@ -430,11 +441,14 @@ System.out.println("update beginning!");
 			String clientId=data[0];
 			int groupId=-1;
 			for(int i=0;i<clients_info.size();i++){
+//System.out.println(clientId+"    "+clients_info.get(i));
 				if(clients_info.get(i).equals(clientId) == true){
 					groupId = groupIndex.get(i);
 					break;
 				}
 			}
+			
+			if(groupId==-1) return;
 			
 			GameStatus status=this.statusList.get(groupId);
 			Setting setting=this.settingList.get(groupId);
@@ -575,15 +589,17 @@ class Receiver implements Runnable {
 	            }
 	            else{
 	            	if(Server.bAllGameNotifiedToStop==false){
+//System.out.println(String.valueOf(Server.totalPlayerNum)+"  "+sentence);
+						if (sentence.contains(",")==true)
+								server.sendPauseCmd();
 		            	if (sentence.contains(",")==false && sentence.contains("-RECEIVED")==false 
 		            			&& sentence.contains("-GROUPIPGET")==false && Server.temp_clients.contains(sentence)==false) {	            		
-		            		
-		            		server.sendPauseCmd();
-		            		
 		            		Server.temp_clients.add(sentence);
+		            	
 		            		if(Server.temp_clients.size()==Server.totalPlayerNum){
-System.out.println("All clients notified!!!");
+//System.out.println("All clients notified!!!");
 		            			Server.bAllGameNotifiedToStop=true;
+		            			Server.bNewClientIdReached=true;
 		            		}
 		            		
 			                try{
@@ -655,39 +671,17 @@ class GroupSender implements Runnable {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				ObjectOutputStream oos = new ObjectOutputStream(baos);
 				if (server.started) {
-					boolean btemp=false;
 					
 					GameStatus status=server.statusList.get(groupId);
 					status.update();
 					
-					server.allGroupsRunning.set(groupId, status.gameRunning);					
-					for(int i=0;i<server.statusList.size();i++){
-						btemp= btemp | server.allGroupsRunning.get(i);
-					}
-										
-					if (btemp==false) {//all groups have succeed, not triggered by time
-						//Thread.sleep(5000);
-						//server.restartGame();
-						server.setGameFinished();
-						
-						//start the ManageSender now
-						baos.flush();
-						baos.close();
-						oos.close();
-						
-						break;
-					}
-					
+					server.allGroupsRunning.set(groupId, status.gameRunning);
 					if(status.gameRunning==true){
 						oos.writeObject(status);
 						send(baos.toByteArray());	
 					}
-					else{
-//TBD: should let the group clients know the game is finished
-					}
 				} 
-				else if (server.startButtonPushed && server.allClientsReceivedGIp) {
-					
+				else if (server.startButtonPushed && server.allClientsReceivedGIp) {					
 					Setting setting=server.settingList.get(groupId);						
 					oos.writeObject(setting);
 					send(baos.toByteArray());
@@ -698,6 +692,22 @@ class GroupSender implements Runnable {
 				baos.flush();
 				baos.close();
 				oos.close();
+				
+				
+				if(server.started==false && server.startButtonPushed==false && server.bGamePaused==true){
+//System.out.println("Check whether game finished!!!");					
+					boolean btemp=false;
+					for(int i=0;i<server.allGroupsRunning.size();i++){
+						btemp= btemp || server.allGroupsRunning.get(i);
+					}
+										
+					if (btemp==false) {
+//System.out.println("Group Sender break loop!!!");						
+						server.setGameFinished();									
+						break;
+					}
+				}
+				
 			} catch (InterruptedException e) {
 				server.clientTextArea.append(e.toString());
 				e.printStackTrace();

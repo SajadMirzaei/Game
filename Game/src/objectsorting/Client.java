@@ -156,7 +156,7 @@ public class Client extends JFrame{
                 gamePanel.updatePositions((GameStatus) object);
             }
             else if(((String)object).contains("PAUSE")){
-System.out.println("PAUSE command received!!!");//
+//System.out.println("PAUSE command received!!!");//
                 connected=false;
                 started=false;
                 if(bsameClientId==false)
@@ -231,8 +231,8 @@ System.out.println("PAUSE command received!!!");//
 	    	    while(ee.hasMoreElements()) {
 	    	        InetAddress ia= (InetAddress) ee.nextElement();
 	    	        String sip=ia.getHostAddress();
-	    	        if(sip.equals("127.0.0.1"))
-	    	        	continue;
+	    	        //if(sip.equals("127.0.0.1"))
+	    	        //	continue;
 	    	        ipAddresses.add(sip);
 //System.out.println(ia.getHostAddress());
 	    	    }

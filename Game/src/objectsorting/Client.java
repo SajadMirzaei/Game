@@ -38,6 +38,7 @@ import objects.Util;
 import objectsorting.object.GameStatus;
 import objectsorting.object.Setting;
 
+
 public class Client extends JFrame{
 	
 	public static String[] avatarNames = new String[27];
@@ -58,6 +59,8 @@ public class Client extends JFrame{
     
     public static boolean bGroupIpReceived=false;
     public static ArrayList<String> ipAddresses=new ArrayList<String>();
+    
+    public static boolean bSucceed=false;
     
 	static{
 		for (int i = 0; i < avatarNames.length; i++) {
@@ -100,7 +103,7 @@ public class Client extends JFrame{
 		pack();
 		setVisible(true);
 		
-		
+		bSucceed=false;
 	}
 	
 	public void startThreads(){
@@ -142,6 +145,7 @@ public class Client extends JFrame{
             Object object = ois.readObject();
                           
             if (object instanceof Setting) {
+            	bSucceed=false;
             	bGroupIpReceived=false;
                 setting = (Setting) object;
                 connected = true;
@@ -167,6 +171,12 @@ public class Client extends JFrame{
                 
                 bfinish=true;
                 delayAWhile(1000);
+            }
+            else if(((String)object).contains("Succeed")){
+            	if(bSucceed==false){
+            		JOptionPane.showMessageDialog(frame, "Succeed!!!!!!!!!!!!");
+            		bSucceed=true;
+            	}
             }
             bis.close();
             ois.close();

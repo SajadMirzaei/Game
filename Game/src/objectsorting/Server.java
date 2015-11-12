@@ -679,6 +679,11 @@ class GroupSender implements Runnable {
 						oos.writeObject(status);
 						send(baos.toByteArray());	
 					}
+					else{
+						String notifySucceed="Succeed";
+						oos.writeObject(notifySucceed);
+						send(baos.toByteArray());
+					}
 				} 
 				else if (server.startButtonPushed && server.allClientsReceivedGIp) {					
 					Setting setting=server.settingList.get(groupId);						
@@ -694,14 +699,14 @@ class GroupSender implements Runnable {
 				
 				
 				if(server.started==false && server.startButtonPushed==false && server.bGamePaused==true){
-//System.out.println("Check whether game finished!!!");					
+//System.out.println("Check whether game finished!!!");
 					boolean btemp=false;
 					for(int i=0;i<server.allGroupsRunning.size();i++){
 						btemp= btemp || server.allGroupsRunning.get(i);
 					}
 										
 					if (btemp==false) {
-//System.out.println("Group Sender break loop!!!");						
+//System.out.println("Group Sender break loop!!!");
 						server.setGameFinished();									
 						break;
 					}

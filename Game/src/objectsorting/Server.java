@@ -358,11 +358,11 @@ public class Server extends JFrame {
 			if (sentence.contains("RECEIVED")==false) {
 				if(sentence.contains("GROUPIPGET")==false){
 					if (clients.contains(sentence)==false) {
-						if(bNewClientIdReached==true)
-						{
-							clients.add(sentence);
-							clients_info.add(sentence);
-						}
+						//if(bNewClientIdReached==true)
+						//{
+						clients.add(sentence);
+						clients_info.add(sentence);
+						//}
 						String ipaddress=inetAddress.getHostAddress();
 						if(ipaddress.equals("localhost"))
 							ipaddress="127.0.0.1";
@@ -743,7 +743,7 @@ class ManageSender implements Runnable {
 		}
 	}
 
-	public void send(byte[] b) {//
+	public void send(byte[] b) {
 		// System.out.println("Sending: " + s);
 		DatagramPacket sendPacket = new DatagramPacket(b, b.length,
 				server.group, Util.MULTI_PORT);

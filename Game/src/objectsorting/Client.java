@@ -230,7 +230,10 @@ System.out.println("PAUSE command received!!!");//
 	    	    Enumeration ee = ni.getInetAddresses();
 	    	    while(ee.hasMoreElements()) {
 	    	        InetAddress ia= (InetAddress) ee.nextElement();
-	    	        ipAddresses.add(ia.getHostAddress());
+	    	        String sip=ia.getHostAddress();
+	    	        if(sip.equals("127.0.0.1"))
+	    	        	continue;
+	    	        ipAddresses.add(sip);
 //System.out.println(ia.getHostAddress());
 	    	    }
 	    	 }

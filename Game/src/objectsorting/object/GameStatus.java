@@ -19,6 +19,9 @@ public class GameStatus implements Serializable{
 	public transient Map<String, List<Long>> playerDropOffMap = new HashMap<String, List<Long>>();
 	public double rate;
 	public boolean gameRunning = true;
+	public boolean wrongObjectAlert = false;
+	public byte wrongObjectAlertCounter = 0;
+	public static final transient int COUNTER_MAX = 100;
 	
 	public transient Setting setting;
 

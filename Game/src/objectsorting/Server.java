@@ -462,6 +462,13 @@ public class Server extends JFrame {
 	}
 
 	private void updateStatus(Player player, int[] position, Setting setting, GameStatus status) {
+		if (status.wrongObjectAlert) {
+			status.wrongObjectAlertCounter ++;
+			if (status.wrongObjectAlertCounter > GameStatus.COUNTER_MAX){
+				status.wrongObjectAlertCounter = 0;
+				status.wrongObjectAlert = false;
+			}
+		}
 		player.setPosition(position);
 		if (player.isSourceAttender()) {
 			if (player.getCarrying() != 0) {
@@ -505,8 +512,13 @@ public class Server extends JFrame {
 							&& position[1] > sinkPosition[1]
 							&& position[1] < sinkPosition[1] + sink.getSize()) {
 						if (player.getCarrying() == sink.getAcceptingObject()) {
+							// right sink
 							status.playerDropOffMap.get(player.getId()).add(
 									System.currentTimeMillis());
+							player.setCarrying(0);
+						}else{
+							// wrong sink
+							status.wrongObjectAlert = true;
 							player.setCarrying(0);
 						}
 					}

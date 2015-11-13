@@ -189,6 +189,11 @@ public class GamePanel extends JPanel{
         			}
         		}
         	}
+        	if (status.wrongObjectAlert) {
+    			g.setColor(Color.RED);
+    			g.setFont(new Font(Font.DIALOG, Font.BOLD, 30));
+    			g.drawChars("LOST".toCharArray(), 0, 4, setting.screenSize[0]/2 - 50, setting.screenSize[1]/2 - 50);
+    		}
         	if (player.isSourceAttender()) {
         		g.setColor(setting.soSelfColor);
         		g.fillOval(player.getPosition()[0]-setting.soSelfSize/2, player.getPosition()[1]-setting.soSelfSize/2, setting.soSelfSize, setting.soSelfSize);

@@ -192,7 +192,7 @@ public class GamePanel extends JPanel{
         	if (status.wrongObjectAlert) {
     			g.setColor(Color.RED);
     			g.setFont(new Font(Font.DIALOG, Font.BOLD, 30));
-    			g.drawChars("WRONG".toCharArray(), 0, 5, setting.screenSize[0]/2 - 50, setting.screenSize[1]/2 - 50);
+    			g.drawChars("LOST".toCharArray(), 0, 4, setting.screenSize[0]/2 - 50, setting.screenSize[1]/2 - 50);
     		}
         	if (player.isSourceAttender()) {
         		g.setColor(setting.soSelfColor);

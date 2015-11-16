@@ -13,7 +13,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -34,6 +36,7 @@ import objectsorting.object.Player;
 import objectsorting.object.Setting;
 import objectsorting.object.Sink;
 import objectsorting.object.Source;
+import objectsorting.object.RecordInfo;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -42,6 +45,10 @@ import org.jdom2.input.SAXBuilder;
 import shuffling.ObjectSortingGame;
 import shuffling.WaveManager;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Server extends JFrame {
 
@@ -80,7 +87,8 @@ public class Server extends JFrame {
     public boolean bfirstGame;
     public static boolean bAllGameNotifiedToStop=false;
     public static boolean bNewClientIdReached=true;
-        
+    public static int iWave=0;
+    
 	public Server() throws Exception {
 		super("Server");
 		
@@ -105,6 +113,7 @@ public class Server extends JFrame {
         allGroupsRunning.clear();
         bAllGameNotifiedToStop=false;
         temp_clients.clear();
+        iWave=0;
 	}
 
 	private void initializeFrame() {
@@ -220,8 +229,14 @@ public class Server extends JFrame {
 	
 	public void broadCastAllFinished() {
 		synchronized (this) {
+			bGamePaused=true;
 			started = false;
 			startButtonPushed = false;
+			
+			for(int i=0;i<Server.statusList.size();i++){// all groups need to be paused
+				Server.statusList.get(i).gameRunning=false;
+				allGroupsRunning.set(i, false);
+			}
 		}
 		clientTextArea.append("All the waves has been finished! \n");
 	}
@@ -250,6 +265,7 @@ public class Server extends JFrame {
     		for(int j=0;j<ngroupNumSize;j++){
     			this.groupIndex.add(-1);
     		}	
+    		iWave++;
     	}
 
 //System.out.println("Total number of players is "+String.valueOf(totalPlayerNum));
@@ -636,12 +652,15 @@ class GroupSender implements Runnable {
 	DatagramSocket sendSocket;
 	InetAddress newgroup;
 	int groupId;
+	ArrayList<RecordInfo> lRecords=new ArrayList<RecordInfo>();
+	
 	public GroupSender(Server server, String newip, int gId) {
 		this.server = server;
 		try {
 			newgroup = InetAddress.getByName(newip);
 			sendSocket = new DatagramSocket();
 			groupId=gId;
+			lRecords.clear();
 		} catch (SocketException | UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -659,7 +678,7 @@ class GroupSender implements Runnable {
 		}
 	}
 
-	public void send(byte[] b) {//object 
+	public void send(byte[] b) {//object
 		// System.out.println("Sending: " + s);
 		DatagramPacket sendPacket = new DatagramPacket(b, b.length,
 				newgroup, Util.MULTI_PORT);
@@ -673,7 +692,38 @@ class GroupSender implements Runnable {
 	public void closeSocket(){
 		sendSocket.close();
 	}
+	
+	public void saveStatusToLogFile(){
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+		String log_name="../Run-"+timeStamp+"-Game"+String.valueOf(server.iWave)+"-Group"+String.valueOf(groupId)+".txt";
 
+		File log_file = new File(log_name);
+		try{
+			if (!log_file.exists()) {
+				log_file.createNewFile();
+			}
+					
+			FileWriter fw = new FileWriter(log_file.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			String stitle="Section:Players\n";
+			bw.write(stitle);
+			String shead="Time\tPlayerNo\tX\tY\tPossession\tIndividual-Processing-Rate\n";
+			bw.write(shead);
+					
+			int nrecords=lRecords.size();
+			for(int i=0;i<nrecords;i++){
+				RecordInfo itemp=lRecords.get(i);				
+				String content=itemp.stime+"\t"+ itemp.playerId +"\t"+ itemp.X +"\t"
+				+itemp.Y+"\t"+ itemp.carrying+"\t"+itemp.dropoff+"\n";
+				bw.write(content);				
+			}
+			bw.flush();
+			bw.close();
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+	}
+	
 	@Override
 	public void run() {
 		while (true) {
@@ -690,6 +740,18 @@ class GroupSender implements Runnable {
 					if(status.gameRunning==true){
 						oos.writeObject(status);
 						send(baos.toByteArray());	
+						
+						//lStatus.add(status);
+						GameStatus itemp=status;
+						int nplayers=itemp.players.size();
+						for(int j=0;j<nplayers;j++){
+							Player iplayer=itemp.players.get(j);
+							int[] pos=iplayer.getPosition();
+							RecordInfo ri=new RecordInfo(String.valueOf(itemp.startTimeMillis),iplayer.getId(),String.valueOf(pos[0]),
+									String.valueOf(pos[1]),	String.valueOf(iplayer.getCarrying()),String.valueOf(iplayer.getDropOffs())	);
+							lRecords.add(ri);
+						}
+						
 					}
 					else{
 						String notifySucceed="Succeed";
@@ -698,9 +760,10 @@ class GroupSender implements Runnable {
 					}
 				} 
 				else if (server.startButtonPushed && server.allClientsReceivedGIp) {					
-					Setting setting=server.settingList.get(groupId);						
+					Setting setting=server.settingList.get(groupId);
 					oos.writeObject(setting);
 					send(baos.toByteArray());
+					lRecords.clear();
 					Thread.sleep(1000);
 				} else {
 					Thread.sleep(1000);
@@ -719,7 +782,8 @@ class GroupSender implements Runnable {
 										
 					if (btemp==false) {
 //System.out.println("Group Sender break loop!!!");
-						server.setGameFinished();									
+						saveStatusToLogFile();
+						server.setGameFinished();
 						break;
 					}
 				}

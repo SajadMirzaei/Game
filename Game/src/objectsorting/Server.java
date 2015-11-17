@@ -653,6 +653,8 @@ class GroupSender implements Runnable {
 	InetAddress newgroup;
 	int groupId;
 	ArrayList<RecordInfo> lRecords=new ArrayList<RecordInfo>();
+	BufferedWriter bw;
+	Boolean bfirst=true;
 	
 	public GroupSender(Server server, String newip, int gId) {
 		this.server = server;
@@ -664,6 +666,7 @@ class GroupSender implements Runnable {
 		} catch (SocketException | UnknownHostException e) {
 			e.printStackTrace();
 		}
+		
 	}
 
 	public void send(String s) {//how to send to specified groups
@@ -693,30 +696,39 @@ class GroupSender implements Runnable {
 		sendSocket.close();
 	}
 	
-	public void saveStatusToLogFile(){
+	public void createStatusLogFile(){
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 		String log_name="../Run-"+timeStamp+"-Game"+String.valueOf(server.iWave)+"-Group"+String.valueOf(groupId)+".txt";
-
 		File log_file = new File(log_name);
 		try{
 			if (!log_file.exists()) {
 				log_file.createNewFile();
 			}
-					
 			FileWriter fw = new FileWriter(log_file.getAbsoluteFile());
-			BufferedWriter bw = new BufferedWriter(fw);
+			bw = new BufferedWriter(fw);
 			String stitle="Section:Players\n";
 			bw.write(stitle);
 			String shead="Time\tPlayerNo\tX\tY\tPossession\tIndividual-Processing-Rate\n";
 			bw.write(shead);
-					
-			int nrecords=lRecords.size();
-			for(int i=0;i<nrecords;i++){
-				RecordInfo itemp=lRecords.get(i);				
-				String content=itemp.stime+"\t"+ itemp.playerId +"\t"+ itemp.X +"\t"
-				+itemp.Y+"\t"+ itemp.carrying+"\t"+itemp.dropoff+"\n";
-				bw.write(content);				
-			}
+			
+		}catch(IOException e){
+			e.printStackTrace();
+		}		
+	}
+	
+	public void saveStatusToLogFile(RecordInfo itemp){
+		try{
+			String content=itemp.stime+"\t"+ itemp.playerId +"\t"+ itemp.X +"\t"
+			+itemp.Y+"\t"+ itemp.carrying+"\t"+itemp.dropoff+"\n";
+			bw.write(content);				
+						
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+	}
+	
+	public void closeStatusLogFile(){
+		try{
 			bw.flush();
 			bw.close();
 		}catch(IOException e){
@@ -740,16 +752,18 @@ class GroupSender implements Runnable {
 					if(status.gameRunning==true){
 						oos.writeObject(status);
 						send(baos.toByteArray());	
-						
-//GameStatus itemp=status;
-//int nplayers=itemp.players.size();
-//for(int j=0;j<nplayers;j++){
-//	Player iplayer=itemp.players.get(j);
-//	int[] pos=iplayer.getPosition();
-//	RecordInfo ri=new RecordInfo(String.valueOf(itemp.startTimeMillis),iplayer.getId(),String.valueOf(pos[0]),
-//			String.valueOf(pos[1]),	String.valueOf(iplayer.getCarrying()),String.valueOf(iplayer.getDropOffs())	);
-//	lRecords.add(ri);
-//}
+
+						GameStatus itemp=status;
+						int nplayers=itemp.players.size();
+						for(int j=0;j<nplayers;j++){
+							Player iplayer=itemp.players.get(j);
+							int[] pos=iplayer.getPosition();
+							RecordInfo ri=new RecordInfo(String.valueOf(itemp.startTimeMillis),iplayer.getId(),String.valueOf(pos[0]),
+									String.valueOf(pos[1]),	String.valueOf(iplayer.getCarrying()),String.valueOf(iplayer.getDropOffs())	);
+							
+							saveStatusToLogFile(ri);//save status to log file
+							//lRecords.add(ri);
+						}
 
 					}
 					else{
@@ -769,7 +783,8 @@ class GroupSender implements Runnable {
 					Setting setting=server.settingList.get(groupId);
 					oos.writeObject(setting);
 					send(baos.toByteArray());
-					lRecords.clear();
+					
+					createStatusLogFile(); //create the log file to record the status
 					Thread.sleep(1000);
 				} else {
 					Thread.sleep(1000);
@@ -789,6 +804,7 @@ class GroupSender implements Runnable {
 					if (btemp==false) {
 //System.out.println("Group Sender break loop!!!");
 //saveStatusToLogFile();
+						closeStatusLogFile(); //close the log file
 						server.setGameFinished();
 						break;
 					}

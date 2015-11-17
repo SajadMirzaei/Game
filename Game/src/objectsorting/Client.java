@@ -305,8 +305,7 @@ class ClientGroupIPReceiver implements Runnable{
 	            	String groupIp=parts[1];//group ip for the received client ip
 	            	
 					boolean bMatch=false;
-					for(int i=0;i<client.ipAddresses.size();i++)
-					{
+					for(int i=0;i<client.ipAddresses.size();i++){
 //System.out.println(client.ipAddresses.get(i)+"_"+cip);
 		            	if(cip.equals(client.ipAddresses.get(i)))
 		            	{

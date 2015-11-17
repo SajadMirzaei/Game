@@ -56,8 +56,8 @@ public class ConfigurationParser extends JFrame {
 	public void readConfigs() {
 		SAXBuilder sxb = new SAXBuilder();
 		try {
-			Document configDoc = sxb.build(Util.load(sConfigFile));
-            //Document configDoc = sxb.build(new File(sConfigFile));
+			//Document configDoc = sxb.build(Util.load(sConfigFile));
+            Document configDoc = sxb.build(new File(sConfigFile));
 			Element rootElmt = configDoc.getRootElement();
 			Iterator<Element> iterator = rootElmt.getChildren().iterator();
 			

@@ -160,8 +160,8 @@ public class Server extends JFrame {
 		try {
 			server = new Server();
 			wavemngr = new WaveManager(server);
-			String sconfig = "../setting.xml";
-            //String sconfig = "G:\\setting.xml";
+			//String sconfig = "../setting.xml";
+            String sconfig = "G:\\setting.xml";
 			wavemngr.loadConfiguration(sconfig);
 			wavemngr.setFirstGame();
 			
@@ -246,7 +246,7 @@ public class Server extends JFrame {
     	Server.statusList.clear();
     	int nGroups=curGame.groupSettingList.size();
     	
-    	int start=20;
+    	int start=30;
     	for(int i=0;i<nGroups;i++){
     		
     		String newip="224.0.0."+String.valueOf(start+i);   		
@@ -741,22 +741,28 @@ class GroupSender implements Runnable {
 						oos.writeObject(status);
 						send(baos.toByteArray());	
 						
-						//lStatus.add(status);
-						GameStatus itemp=status;
-						int nplayers=itemp.players.size();
-						for(int j=0;j<nplayers;j++){
-							Player iplayer=itemp.players.get(j);
-							int[] pos=iplayer.getPosition();
-							RecordInfo ri=new RecordInfo(String.valueOf(itemp.startTimeMillis),iplayer.getId(),String.valueOf(pos[0]),
-									String.valueOf(pos[1]),	String.valueOf(iplayer.getCarrying()),String.valueOf(iplayer.getDropOffs())	);
-							lRecords.add(ri);
-						}
-						
+//GameStatus itemp=status;
+//int nplayers=itemp.players.size();
+//for(int j=0;j<nplayers;j++){
+//	Player iplayer=itemp.players.get(j);
+//	int[] pos=iplayer.getPosition();
+//	RecordInfo ri=new RecordInfo(String.valueOf(itemp.startTimeMillis),iplayer.getId(),String.valueOf(pos[0]),
+//			String.valueOf(pos[1]),	String.valueOf(iplayer.getCarrying()),String.valueOf(iplayer.getDropOffs())	);
+//	lRecords.add(ri);
+//}
+
 					}
 					else{
 						String notifySucceed="Succeed";
 						oos.writeObject(notifySucceed);
 						send(baos.toByteArray());
+						boolean btemp=false;
+						for(int i=0;i<server.allGroupsRunning.size();i++){
+							btemp= btemp || server.allGroupsRunning.get(i);
+						}
+						if (btemp==false) {
+							server.stopCurrentGame();
+						}
 					}
 				} 
 				else if (server.startButtonPushed && server.allClientsReceivedGIp) {					
@@ -782,7 +788,7 @@ class GroupSender implements Runnable {
 										
 					if (btemp==false) {
 //System.out.println("Group Sender break loop!!!");
-						saveStatusToLogFile();
+//saveStatusToLogFile();
 						server.setGameFinished();
 						break;
 					}

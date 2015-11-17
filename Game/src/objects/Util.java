@@ -15,7 +15,8 @@ public final class Util {
 	public static final String RATE_INDICATOR = "rate";
 	public static int MULTI_PORT = 9876;
 	public static int UNI_PORT = 9877;
-	public static String GROUP_ADDRESS = "224.0.0.3";
+	public static String GROUP_ADDRESS = "224.0.0.4";
+	public static String NEW_GROUP_ADDRESS_PREFIX="224.0.0.";
 	public static final String BASE_SIGN = "^";
 	public static final String OBJ_PLAYER = "p";
 	public static final String OBJ_SOURCE = "so";

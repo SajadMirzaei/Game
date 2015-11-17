@@ -160,8 +160,8 @@ public class Server extends JFrame {
 		try {
 			server = new Server();
 			wavemngr = new WaveManager(server);
-			//String sconfig = "../setting.xml";
-            String sconfig = "G:\\setting.xml";
+			String sconfig = "../setting.xml";
+            //String sconfig = "G:\\setting.xml";
 			wavemngr.loadConfiguration(sconfig);
 			wavemngr.setFirstGame();
 			

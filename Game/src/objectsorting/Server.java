@@ -698,7 +698,8 @@ class GroupSender implements Runnable {
 	
 	public void createStatusLogFile(){
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-		String log_name="../Run-"+timeStamp+"-Game"+String.valueOf(server.iWave)+"-Group"+String.valueOf(groupId)+".txt";
+		String log_name="./Run-"+timeStamp+"-Game"+String.valueOf(server.iWave)+"-Group"+String.valueOf(groupId)+".txt";
+		//JOptionPane.showMessageDialog(null, log_name);
 		File log_file = new File(log_name);
 		try{
 			if (!log_file.exists()) {
@@ -712,6 +713,7 @@ class GroupSender implements Runnable {
 			bw.write(shead);
 			
 		}catch(IOException e){
+			//JOptionPane.showMessageDialog(null,e.getMessage());
 			e.printStackTrace();
 		}		
 	}
@@ -720,6 +722,9 @@ class GroupSender implements Runnable {
 		try{
 			String content=itemp.stime+"\t"+ itemp.playerId +"\t"+ itemp.X +"\t"
 			+itemp.Y+"\t"+ itemp.carrying+"\t"+itemp.dropoff+"\n";
+			
+			//JOptionPane.showMessageDialog(null,content);
+			
 			bw.write(content);				
 						
 		}catch(IOException e){
@@ -731,7 +736,9 @@ class GroupSender implements Runnable {
 		try{
 			bw.flush();
 			bw.close();
+			//JOptionPane.showMessageDialog(null,"closing");
 		}catch(IOException e){
+			//JOptionPane.showMessageDialog(null,"closing"+e.getMessage());
 			e.printStackTrace();
 		}
 	}

@@ -1,5 +1,6 @@
 package objectsorting;
 
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -20,6 +21,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -51,7 +56,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class Server extends JFrame {
-
+	
+	
 	public InetAddress group = InetAddress.getByName(Util.GROUP_ADDRESS);
 	JTextArea clientTextArea = new JTextArea(10, 20);
 	JButton button;
@@ -89,9 +95,18 @@ public class Server extends JFrame {
     public static boolean bNewClientIdReached=true;
     public static int iWave=0;
     
+    public static final Logger logger = Logger.getLogger( Server.class.getName() );
+    
 	public Server() throws Exception {
 		super("Server");
 		
+//		FileHandler fh = new FileHandler("res/log.txt");  
+		FileHandler fh = new FileHandler(new File(".").getCanonicalPath()+"/serverLog.txt");  
+        logger.addHandler(fh);
+        SimpleFormatter formatter = new SimpleFormatter();  
+        fh.setFormatter(formatter);  
+        logger.setLevel(Level.ALL);
+		logger.info("Constructor");
 		initializeFrame();
 		started = false;
 		startButtonPushed=false;
@@ -118,6 +133,7 @@ public class Server extends JFrame {
 
 	private void initializeFrame() {
 		// Client Pane
+		logger.info("Initializing Frame");
 		JPanel clientPane = new JPanel(new BorderLayout());
 		JLabel labels = new JLabel("Clients:");
 		clientPane.add(labels, BorderLayout.NORTH);
@@ -128,6 +144,7 @@ public class Server extends JFrame {
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				logger.info("Start Button Pressed");
 				button.setEnabled(false);
 				// initializeGameSetup();
 				synchronized (this) {
@@ -166,8 +183,10 @@ public class Server extends JFrame {
 			wavemngr.setFirstGame();
 			
 			server.startThreads();
+			throw (new Exception());
 			
 		} catch (Exception e) {
+			server.logger.throwing("Server", "main", e);
 			JDialog d = new JDialog(server);
 			d.getContentPane()
 					.add(new JTextArea("Error: \n" + e.getMessage() + "\n" + e.toString()));
@@ -182,33 +201,35 @@ public class Server extends JFrame {
         try {
                     Thread.sleep(msec);
             } catch (InterruptedException e) {
-                    e.printStackTrace();
+            	server.logger.throwing("Server", "delayAWhile", e);
+                 e.printStackTrace();
             }
     }  
 	
-    public void sendPauseCmd()
-    {
-        try{
-        	int nGroups=Server.settingList.size();
-    		for(int i=0;i<nGroups;i++){
-//System.out.println("Server send PAUSE to group: "+String.valueOf(i));
-    			GroupSender gsender=this.grpsenders.get(i);
-    			
-	            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	            ObjectOutputStream oos = new ObjectOutputStream(baos);
-	            String content="PAUSE";
-	            oos.writeObject(content);
-	            gsender.send(baos.toByteArray());
-	            
-	            baos.flush();
+	public void sendPauseCmd() {
+		try {
+			int nGroups = Server.settingList.size();
+			for (int i = 0; i < nGroups; i++) {
+				// System.out.println("Server send PAUSE to group:
+				// "+String.valueOf(i));
+				GroupSender gsender = this.grpsenders.get(i);
+
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				ObjectOutputStream oos = new ObjectOutputStream(baos);
+				String content = "PAUSE";
+				oos.writeObject(content);
+				gsender.send(baos.toByteArray());
+
+				baos.flush();
 				baos.close();
 				oos.close();
-	            
-    		}
-        } catch (IOException e) {
-                e.printStackTrace();
-        }
-    }
+
+			}
+		} catch (IOException e) {
+			server.logger.throwing("Server", "sendPauseCmd", e);
+			e.printStackTrace();
+		}
+	}
     
         
 	public void stopCurrentGame() {
@@ -307,6 +328,7 @@ public class Server extends JFrame {
 		try {
 			Thread.sleep(15000);
 		} catch (InterruptedException e) {
+			server.logger.throwing("Server", "startNewGame", e);
 			e.printStackTrace();
 		}
 		
@@ -593,6 +615,7 @@ class Receiver implements Runnable {
 			receiverSocket = new DatagramSocket(Util.UNI_PORT);
 			// System.out.println("Sdfsd " + receiverSocket.getInetAddress());
 		} catch (SocketException e) {
+			this.server.logger.throwing("Server", "delayAWhile", e);
 			e.printStackTrace();
 		}
 	}
@@ -638,8 +661,10 @@ class Receiver implements Runnable {
 	            	}
 	            }
 			} catch (SocketException e) {
+				server.logger.throwing("Receiver", "run", e);
 				e.printStackTrace();
 			} catch (IOException e) {
+				server.logger.throwing("Receiver", "run", e);
 				e.printStackTrace();
 			}
 		}
@@ -664,6 +689,7 @@ class GroupSender implements Runnable {
 			groupId=gId;
 			lRecords.clear();
 		} catch (SocketException | UnknownHostException e) {
+			server.logger.throwing("GroupSender", "GroupSender", e);
 			e.printStackTrace();
 		}
 		
@@ -677,6 +703,7 @@ class GroupSender implements Runnable {
 		try {
 			sendSocket.send(sendPacket);
 		} catch (IOException e) {
+			server.logger.throwing("GroupSender", "send(String)", e);
 			e.printStackTrace();
 		}
 	}
@@ -688,6 +715,7 @@ class GroupSender implements Runnable {
 		try {
 			sendSocket.send(sendPacket);
 		} catch (IOException e) {
+			server.logger.throwing("Server", "sent(byte)", e);
 			e.printStackTrace();
 		}
 	}
@@ -714,6 +742,7 @@ class GroupSender implements Runnable {
 			
 		}catch(IOException e){
 			//JOptionPane.showMessageDialog(null,e.getMessage());
+			server.logger.throwing("GroupSender", "createStatusLogFile", e);
 			e.printStackTrace();
 		}		
 	}
@@ -728,6 +757,7 @@ class GroupSender implements Runnable {
 			bw.write(content);				
 						
 		}catch(IOException e){
+			server.logger.throwing("GroupSender", "saveStatusToLogFile", e);
 			e.printStackTrace();
 		}
 	}
@@ -739,6 +769,7 @@ class GroupSender implements Runnable {
 			//JOptionPane.showMessageDialog(null,"closing");
 		}catch(IOException e){
 			//JOptionPane.showMessageDialog(null,"closing"+e.getMessage());
+			server.logger.throwing("GroupSender", "closeStatusToLogFile", e);
 			e.printStackTrace();
 		}
 	}
@@ -819,8 +850,10 @@ class GroupSender implements Runnable {
 				
 			} catch (InterruptedException e) {
 				server.clientTextArea.append(e.toString());
+				server.logger.throwing("GroupSender", "run", e);
 				e.printStackTrace();
 			} catch (IOException e) {
+				server.logger.throwing("GroupSender", "run", e);
 				e.printStackTrace();
 			}
 		}
@@ -837,6 +870,7 @@ class ManageSender implements Runnable {
 		try {
 			sendSocket = new DatagramSocket();
 		} catch (SocketException e) {
+			server.logger.throwing("ManageSender", "ManageSender", e);
 			e.printStackTrace();
 		}
 	}
@@ -849,6 +883,7 @@ class ManageSender implements Runnable {
 		try {
 			sendSocket.send(sendPacket);
 		} catch (IOException e) {
+			server.logger.throwing("ManageSender", "send(s)", e);
 			e.printStackTrace();
 		}
 	}
@@ -860,6 +895,7 @@ class ManageSender implements Runnable {
 		try {
 			sendSocket.send(sendPacket);
 		} catch (IOException e) {
+			server.logger.throwing("ManageSender", "send(b)", e);
 			e.printStackTrace();
 		}
 	}
@@ -900,8 +936,10 @@ class ManageSender implements Runnable {
 				
 			} catch (InterruptedException e) {
 				server.clientTextArea.append(e.toString());
+				server.logger.throwing("ManageSender", "run", e);
 				e.printStackTrace();
 			} catch (IOException e) {
+				server.logger.throwing("ManageSender", "run", e);
 				e.printStackTrace();
 			}
 		}
